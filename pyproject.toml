@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eval-grid"
+version = "0.1.0"
+description = "Comprehensive evaluation framework for LLM and AI projects"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pydantic>=2.0", "pandas>=2.0"]
+
+[project.scripts]
+eval-grid = "scripts.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["core*", "evals*", "guards*", "adapters*", "pipelines*", "reports*"]

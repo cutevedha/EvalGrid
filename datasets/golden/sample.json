@@ -1,0 +1,7 @@
+[
+  {
+    "id": "g1",
+    "input": "Extract invoice number",
+    "expected_output": "INV-123"
+  }
+]
