@@ -3,3 +3,6 @@ __pycache__/
 .venv/
 output/
 .pytest_cache/
+.env
+.env.local
+.env.*.local
