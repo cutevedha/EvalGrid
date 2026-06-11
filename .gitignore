@@ -3,6 +3,8 @@ __pycache__/
 .venv/
 output/
 .pytest_cache/
+.DS_Store
+.claude/
 .env
 .env.local
 .env.*.local
