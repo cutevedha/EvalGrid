@@ -157,6 +157,21 @@ class MetricRegistry:
         return metrics
 
     @classmethod
+    def get_callable(cls, name: str) -> Optional[Callable]:
+        """
+        Return the underlying callable for a metric (class .compute or function).
+
+        Used by callers that need to introspect a metric's signature — e.g. to discover
+        which extra data parameters it requires before deciding whether to run it.
+        """
+        registry = cls()
+        if name in registry._metrics:
+            return registry._metrics[name].compute
+        if name in registry._metric_functions:
+            return registry._metric_functions[name]["func"]
+        return None
+
+    @classmethod
     def get_metadata(cls, name: str) -> Optional[MetricMetadata]:
         """Get metadata for a metric"""
         registry = cls()

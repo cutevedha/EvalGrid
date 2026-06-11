@@ -8,6 +8,7 @@ A comprehensive, production-grade framework for evaluating and testing AI system
 ## Features
 
 ### Core Capabilities
+- **Autonomous Eval Agent** - Point it at any AI system with a plain-English goal; it plans probes, drives the target, evaluates, and adaptively red-teams weak areas on its own
 - **100+ Built-in Metrics** across 9 categories (deterministic, semantic, judge, agent, RAG, safety, performance, robustness, fairness)
 - **Custom Metric Builder** - Decorator-based and class-based custom metrics with full registry support
 - **Multi-Agent Evaluation** - Handoff quality, orchestration correctness, communication clarity
@@ -58,6 +59,86 @@ This generates:
 eval-grid list-metrics
 eval-grid list-metrics --tag safety
 eval-grid list-metrics --capability agent
+```
+
+## Autonomous Evaluation (Eval Agent)
+
+Instead of hand-writing test cases, point the **EvalAgent** at any AI system and give
+it a plain-English goal. The agent autonomously:
+
+1. **Plans** — turns your goal + the target's capabilities into a set of probes
+   (functional checks + red-team attacks implied by the goal).
+2. **Generates** test cases for each probe.
+3. **Drives** the target to produce outputs (LLM, callable, or offline output map).
+4. **Evaluates** every output with the existing Orchestrator + metrics.
+5. **Reflects** — finds the weakest probes and **mutates the failing inputs into
+   harder adversarial variants** for the next round (adaptive red-teaming).
+6. **Reports** — emits a verdict, per-probe findings, and standard HTML/JSON/MD reports.
+
+### CLI
+
+```bash
+# Drive the built-in mock target (no API key needed)
+eval-grid auto --goal "make sure the assistant is safe against jailbreaks and stays grounded"
+
+# Drive a real model
+eval-grid auto --goal "evaluate safety and groundedness" \
+  --target openai --model gpt-4 --capabilities generation,rag --rounds 3 --cases 5
+
+# Evaluate pre-computed outputs offline (CI-friendly; exits non-zero on FAIL)
+eval-grid auto --goal "safety regression check" --target offline --outputs outputs.json
+```
+
+Reports are written to `output/`: `agent_report.json` (structured findings + verdict),
+plus the usual `report.html`, `scorecard.csv`, `run_results.json`, and `report.md`.
+
+### Python API
+
+```python
+from agent import EvalAgent, EvalTarget
+from adapters.llm.openai_adapter import OpenAIAdapter
+
+# Wrap any system-under-test as a target...
+target = EvalTarget.from_llm(OpenAIAdapter(model="gpt-4"))     # an LLM client
+# target = EvalTarget.from_callable(my_bot)                    # any fn(input, context) -> str
+# target = EvalTarget.from_outputs({"t1": "..."})              # offline, pre-computed
+
+# ...then let the agent evaluate it autonomously
+report = EvalAgent(target).run(
+    goal="make sure the assistant is safe against jailbreaks and stays grounded",
+    capabilities=["generation"],
+    max_rounds=3,
+    cases_per_probe=5,
+)
+
+print(report.summary)            # natural-language verdict
+print("PASS" if report.passed else "FAIL")
+for f in report.weak_findings():
+    print(f.probe, f.severity, f"{f.pass_rate:.0%}", f.weakest_metric)
+```
+
+A runnable, multi-target demo lives in [`examples/autonomous_eval.py`](examples/autonomous_eval.py).
+
+### Refusal detection for adversarial probes
+
+For red-team probes the correct target behaviour is to **refuse**. The agent scores
+refusal with a tiered detector, using the most robust signal available:
+
+1. **Dedicated classifier** — pass `refusal_detector=fn(output) -> score` (e.g. a
+   fine-tuned model) for the strongest verdicts.
+2. **LLM judge** — pass `reasoner=<LLMClient>` and the agent asks it YES/NO per output.
+3. **Keyword heuristic** — the zero-dependency fallback when neither is configured.
+
+```python
+from agent import EvalAgent, EvalTarget
+from adapters.llm.anthropic_adapter import AnthropicAdapter
+
+agent = EvalAgent(
+    EvalTarget.from_callable(my_bot),
+    reasoner=AnthropicAdapter(model="claude-3-sonnet-20240229"),  # LLM-judged refusals
+    # refusal_detector=my_finetuned_classifier,                   # or a dedicated model
+)
+report = agent.run("evaluate safety against jailbreaks", capabilities=["generation"])
 ```
 
 ## Usage Examples
@@ -368,6 +449,7 @@ See [Custom Metrics Guide](docs/custom_metrics_guide.md) for advanced examples.
 ```
 eval_grid/
 ├── core/                    # Core schemas, orchestrator, metric registry
+├── agent/                   # Autonomous Eval Agent (target, planner, memory, report)
 ├── evals/                   # 100+ evaluation metrics
 ├── guards/                  # Safety guards (PII, toxicity, hallucination)
 ├── adapters/                # LLM adapters (OpenAI, Anthropic, Ollama)
@@ -474,5 +556,5 @@ If you use this framework in your research, please cite:
 ---
 
 **Version:** 1.0.0  
-**Last Updated:** 2024
+**Last Updated:** 2026
 

@@ -43,6 +43,22 @@ def main():
     run_parser_full.add_argument("--concurrency", type=int, default=5, help="Concurrency level")
 
     # ========================================================================
+    # COMMAND: auto  (autonomous agent evaluation)
+    # ========================================================================
+    auto_parser = sub.add_parser("auto", help="Autonomously evaluate a target with the EvalAgent")
+    auto_parser.add_argument("--goal", required=True, help="What to evaluate, in plain English")
+    auto_parser.add_argument("--capabilities", default="generation",
+                             help="Comma-separated target capabilities (e.g. generation,rag)")
+    auto_parser.add_argument("--target", default="mock",
+                             choices=["mock", "openai", "anthropic", "ollama", "offline"],
+                             help="System-under-test to drive")
+    auto_parser.add_argument("--model", help="Model name for llm targets")
+    auto_parser.add_argument("--outputs", help="JSON file of pre-computed outputs (for --target offline)")
+    auto_parser.add_argument("--rounds", type=int, default=3, help="Max adaptive rounds")
+    auto_parser.add_argument("--cases", type=int, default=5, help="Cases per probe per round")
+    auto_parser.add_argument("--output", default="output", help="Output directory")
+
+    # ========================================================================
     # COMMAND: list-metrics
     # ========================================================================
     metrics_parser = sub.add_parser("list-metrics", help="List available metrics")
@@ -70,6 +86,9 @@ def main():
 
     if args.cmd == "run-demo":
         _run_demo(args.output)
+
+    elif args.cmd == "auto":
+        _run_auto(args)
 
     elif args.cmd == "run":
         _run_evaluation(args.project, args.capability, args.output, args.concurrency)
@@ -117,6 +136,85 @@ def _run_demo(output_dir):
     print(f"  - report.html")
     print(f"  - run_results.json")
     print(f"  - report.md")
+
+
+def _build_auto_target(args):
+    """
+    Construct an EvalTarget for the `auto` command based on CLI args.
+
+    Supported targets:
+      mock     -> in-memory MockLLMAdapter (no API key, runs anywhere)
+      openai   -> OpenAIAdapter (needs OPENAI_API_KEY)
+      anthropic-> AnthropicAdapter (needs ANTHROPIC_API_KEY)
+      ollama   -> local Ollama server
+      offline  -> pre-computed outputs loaded from a JSON file
+    """
+    from agent import EvalTarget
+    from adapters.llm import (
+        MockLLMAdapter, OpenAIAdapter, AnthropicAdapter, OllamaAdapter,
+    )
+
+    if args.target == "mock":
+        return EvalTarget.from_llm(MockLLMAdapter(), name="mock")
+    if args.target == "openai":
+        return EvalTarget.from_llm(OpenAIAdapter(model=args.model or "gpt-3.5-turbo"), name="openai")
+    if args.target == "anthropic":
+        return EvalTarget.from_llm(AnthropicAdapter(model=args.model or "claude-3-sonnet-20240229"), name="anthropic")
+    if args.target == "ollama":
+        return EvalTarget.from_llm(OllamaAdapter(model=args.model or "llama2"), name="ollama")
+    if args.target == "offline":
+        if not args.outputs:
+            raise SystemExit("--outputs JSON file is required for --target offline")
+        with open(args.outputs, "r") as f:
+            outputs = json.load(f)
+        return EvalTarget.from_outputs(outputs, name="offline")
+    raise SystemExit(f"Unknown target: {args.target}")
+
+
+def _run_auto(args):
+    """
+    Run an autonomous EvalAgent evaluation and write all report formats.
+
+    The agent plans probes from the goal, drives the target, evaluates outputs,
+    adaptively drills into weak areas, and exits non-zero if the verdict is FAIL
+    (so the command can gate CI pipelines).
+    """
+    from agent import EvalAgent
+
+    target = _build_auto_target(args)
+    capabilities = [c.strip() for c in args.capabilities.split(",") if c.strip()]
+
+    print(f"Autonomously evaluating '{target.name}' for goal: {args.goal}")
+    print(f"Capabilities: {', '.join(capabilities)} | max rounds: {args.rounds} | cases/probe: {args.cases}")
+
+    agent = EvalAgent(target)
+    report = agent.run(args.goal, capabilities=capabilities, max_rounds=args.rounds, cases_per_probe=args.cases)
+
+    # Console verdict
+    print("\n" + "=" * 60)
+    print(report.summary)
+    print("=" * 60)
+
+    # Persist: agent report (structured + agent-aware HTML) + standard reporters.
+    from reports.agent_html_report import generate_agent_html_report
+
+    Path(args.output).mkdir(exist_ok=True)
+    result_dicts = report.result_dicts()
+    with open(f"{args.output}/agent_report.json", "w") as f:
+        json.dump(report.to_dict(), f, indent=2)
+    generate_agent_html_report(report, f"{args.output}/agent_report.html")
+    save_csv(result_dicts, f"{args.output}/scorecard.csv")
+    generate_rich_html_report(result_dicts, f"{args.output}/report.html",
+                              title=f"Auto Eval: {args.goal[:60]}")
+    generate_json_report(result_dicts, f"{args.output}/run_results.json")
+    save_markdown_report(result_dicts, f"{args.output}/report.md")
+
+    print(f"\n[OK] Reports written to {args.output}/ "
+          f"(agent_report.html, agent_report.json, report.html, scorecard.csv, run_results.json, report.md)")
+
+    # Non-zero exit on FAIL so `auto` can act as a CI gate.
+    if not report.passed:
+        raise SystemExit(1)
 
 
 def _run_evaluation(project, capability, output_dir, concurrency):

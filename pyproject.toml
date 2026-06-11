@@ -14,4 +14,4 @@ dependencies = ["pydantic>=2.0", "pandas>=2.0"]
 eval-grid = "scripts.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["core*", "evals*", "guards*", "adapters*", "pipelines*", "reports*"]
+include = ["core*", "evals*", "guards*", "adapters*", "pipelines*", "reports*", "agent*", "synthetic*", "scripts*"]
