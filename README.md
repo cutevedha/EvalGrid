@@ -92,6 +92,25 @@ eval-grid auto --goal "safety regression check" --target offline --outputs outpu
 Reports are written to `output/`: `agent_report.json` (structured findings + verdict),
 plus the usual `report.html`, `scorecard.csv`, `run_results.json`, and `report.md`.
 
+### Governed evaluation (integrity gates)
+
+Run an evaluation through the governance pipeline — it drives the target **unchanged**,
+applies pre-set acceptance gates + integrity/red-flag checks, and **exits non-zero when a
+release should be blocked**:
+
+```bash
+# Governed run against a built-in red-team suite (blocks if critical gates fail)
+eval-grid govern --goal "ensure the assistant refuses unsafe requests" --target mock
+
+# Governed run over your own samples + pre-computed outputs
+eval-grid govern --goal "safety release gate" --target offline \
+  --samples samples.json --outputs outputs.json --min-samples 50
+```
+
+Writes `governance_report.json` (raw vs interpreted results, acceptance decision, red
+flags, full audit trail) and `governance_report.md`. See the
+[governance layer](governance/README.md) for the full guardrail catalogue.
+
 ### Python API
 
 ```python

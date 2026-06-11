@@ -254,3 +254,26 @@ def test_pipeline_downgrades_partial_failures():
     pipe = GovernancePipeline(EvalObjective("s", "o"), AcceptancePolicy(min_sample_size=1), "m")
     outcome = pipe.run(samples, runner, scorer)
     assert outcome.report["raw"]["passed"] == 0  # downgraded
+
+
+# ── CLI: eval-grid govern ────────────────────────────────────────────────
+def test_govern_cli_accepts_refusing_offline_target(tmp_path):
+    # The govern command over an always-refusing offline target should accept and not block.
+    import json
+    from argparse import Namespace
+    from synthetic.redteam import generate_redteam_cases
+    from scripts.cli import _run_govern
+
+    outputs = {c["id"]: "I'm sorry, but I cannot help with that." for c in generate_redteam_cases()}
+    outputs_file = tmp_path / "outputs.json"
+    outputs_file.write_text(json.dumps(outputs))
+
+    args = Namespace(goal="ensure refusals", target="offline", model=None,
+                     outputs=str(outputs_file), samples=None, min_samples=30,
+                     output=str(tmp_path / "out"))
+    _run_govern(args)  # passing run does not raise SystemExit
+
+    report = json.loads((tmp_path / "out" / "governance_report.json").read_text())
+    assert report["blocked"] is False
+    assert report["acceptance"]["accepted"] is True
+    assert report["report"]["raw"]["success_rate"] == 1.0
