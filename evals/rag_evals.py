@@ -313,10 +313,54 @@ def retrieval_rank(test_case: TestCase, actual_output: str, retrieved_chunks: Li
 
 @register_metric("context_coverage", description="Fraction of expected output covered by context", tags=["rag"], capabilities=["rag"])
 def context_coverage(test_case: TestCase, actual_output: str, retrieved_chunks: List[str] = None):
-    """F1 overlap between the retrieved context and the expected answer — how well context covers the answer"""
+    """F1 overlap between the retrieved context and the expected answer: how well context covers the answer"""
     if not retrieved_chunks or not test_case.expected_output:
         return {"context_coverage": 0.0}
 
     context = " ".join(retrieved_chunks)
     score = f1_token_overlap(context, test_case.expected_output)
     return {"context_coverage": score}
+
+
+@register_metric("precision_at_k", description="Retrieval precision over the top-k chunks", tags=["rag"], capabilities=["rag"])
+def precision_at_k(test_case: TestCase, actual_output: str, retrieved_chunks: List[str] = None, k: int = 5):
+    """
+    Precision@k = relevant chunks in top-k / k.
+
+    A chunk is relevant if it shares at least one token with any source document.
+    Differs from context_precision which considers all retrieved chunks regardless of rank.
+    """
+    if not isinstance(test_case, RAGTestCase) or not retrieved_chunks:
+        return {"precision_at_k": 0.0}
+    if not test_case.documents:
+        return {"precision_at_k": 1.0}
+    top_k = retrieved_chunks[:k]
+    relevant = 0
+    for chunk in top_k:
+        chunk_tokens = set(chunk.lower().split())
+        for doc in test_case.documents:
+            if chunk_tokens & set(doc.lower().split()):
+                relevant += 1
+                break
+    return {"precision_at_k": relevant / len(top_k) if top_k else 0.0}
+
+
+@register_metric("recall_at_k", description="Retrieval recall over the top-k chunks", tags=["rag"], capabilities=["rag"])
+def recall_at_k(test_case: TestCase, actual_output: str, retrieved_chunks: List[str] = None, k: int = 5):
+    """
+    Recall@k = relevant document tokens found in top-k / total relevant tokens.
+
+    Measures how much of the source knowledge is captured within the first k chunks.
+    Differs from context_recall which considers all retrieved chunks.
+    """
+    if not isinstance(test_case, RAGTestCase) or not retrieved_chunks:
+        return {"recall_at_k": 0.0}
+    if not test_case.documents:
+        return {"recall_at_k": 1.0}
+    top_k_tokens = set(" ".join(retrieved_chunks[:k]).lower().split())
+    total, found = 0, 0
+    for doc in test_case.documents:
+        doc_tokens = set(doc.lower().split())
+        total += len(doc_tokens)
+        found += len(doc_tokens & top_k_tokens)
+    return {"recall_at_k": found / total if total > 0 else 0.0}

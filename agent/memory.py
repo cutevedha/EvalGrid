@@ -1,7 +1,23 @@
-# Agent Memory - Tracks evaluation state across adaptive rounds
-# The autonomous agent reflects on what it has already learned to decide where to dig
-# deeper, so it needs a running record of which probe each result came from and how
-# each probe is scoring. Memory is the single source of truth the reflection step reads.
+"""
+agent/memory.py: Short-term memory for the autonomous EvalAgent.
+
+Why does the agent need memory?
+--------------------------------
+The agent runs in multiple rounds.  After each round it needs to know:
+- Which probes are still "weak" (failing too often) and need more investigation.
+- Which inputs have already been tried (to avoid retesting the same thing).
+- Which inputs failed, so they can be mutated into harder variants next round.
+
+AgentMemory is the single source of truth for all of the above.  It stores every
+(TestCase, EvalResult) pair indexed by the probe that produced it, and exposes
+aggregation helpers that the reflection step reads to decide what to do next.
+
+ProbeFinding
+------------
+The key output of AgentMemory is a ProbeFinding: a summary of how one probe
+performed so far: pass rate, weakest metric, and a few sample failing inputs.
+A probe is considered "weak" (worth drilling into) when its pass rate is below 80%.
+"""
 
 from __future__ import annotations
 
@@ -46,7 +62,7 @@ class AgentMemory:
         return [res for pairs in self._by_probe.values() for _, res in pairs]
 
     def seen_inputs(self, probe_name: str) -> set:
-        """Inputs already tried for a probe — used to avoid re-running duplicates."""
+        """Inputs already tried for a probe: used to avoid re-running duplicates."""
         return {tc.input for tc, _ in self._by_probe.get(probe_name, [])}
 
     # ------------------------------------------------------------------
@@ -59,7 +75,7 @@ class AgentMemory:
 
         The gate score is the mean across the probe's gate metrics, normalised so that
         "lower is better" metrics (e.g. prompt_injection_detected with threshold 0.0)
-        contribute correctly — a case passes its gate when every gate metric clears.
+        contribute correctly: a case passes its gate when every gate metric clears.
         """
         spec = self._specs[probe_name]
         pairs = self._by_probe[probe_name]
@@ -118,7 +134,7 @@ class AgentMemory:
 
 def _gate_component(score: float, threshold: float) -> float:
     """
-    Normalise a single metric's contribution to a 0–1 'goodness' value.
+    Normalise a single metric's contribution to a 0-1 'goodness' value.
 
     For a "higher is better" gate (threshold > 0) the raw score already represents
     goodness. For a "must be zero" gate such as prompt_injection_detected (threshold

@@ -1,3 +1,27 @@
+"""
+synthetic/dataset_builder.py: Load, validate, and build evaluation datasets.
+
+An evaluation dataset is a collection of test cases: each one specifying an input
+to send to the AI, what the expected output looks like, and how to judge the answer.
+
+This module handles:
+  - Loading test cases from JSON or YAML files on disk.
+  - Validating that each test case has the required fields (using Pydantic models).
+  - Building dataset variants: e.g. filter by capability or severity, or merge
+    multiple files into a single dataset.
+
+Supported file formats
+----------------------
+- JSON  (.json) : a list of test case objects.
+- YAML  (.yaml / .yml): same structure, YAML syntax.
+
+Usage
+-----
+    from synthetic.dataset_builder import DatasetBuilder
+    builder = DatasetBuilder()
+    cases = builder.load("datasets/my_tests.json")
+"""
+
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, ValidationError
 import json

@@ -1,14 +1,48 @@
-# Governance Pipeline - the suggested 6-step structure
-# Ties the category modules into one flow:
-#   1. validate inputs + dataset provenance
-#   2. run the model under test UNCHANGED (capture, never modify)
-#   3. score with versioned metrics/judges
-#   4. log everything for audit and replay
-#   5. compare against fixed thresholds and baselines
-#   6. block or flag when confidence or integrity checks fail
-#
-# The pipeline is decoupled via callables: pass any runner (your target) and scorer (your
-# metrics). It never touches the target — it only measures, records, and gates.
+"""
+governance/pipeline.py: The 6-step governed evaluation pipeline.
+
+What is governance in AI evaluation?
+-------------------------------------
+Production AI systems need more than a pass/fail score: they need an auditable
+record that proves the evaluation was conducted honestly and that results can be
+trusted.  The GovernancePipeline enforces that.
+
+The 6 steps
+-----------
+1. **Validate inputs + dataset provenance**
+   Hash the dataset to detect tampering.  Check for duplicate samples and
+   prompt-injection attacks embedded in the evaluation inputs.
+
+2. **Run the model under test UNCHANGED**
+   Capture the raw output from the target system.  The pipeline never modifies
+   what the model says: it only observes and records.
+
+3. **Score with versioned metrics/judges**
+   Compute scores using the Orchestrator.  Partial/malformed outputs are
+   automatically downgraded to FAILED: they cannot pass by mistake.
+
+4. **Log everything for audit and replay**
+   Every action is appended to an AuditLog with a timestamp.  The full log is
+   returned in GovernanceOutcome.audit so it can be stored and replayed later.
+
+5. **Compare against fixed thresholds and build the report**
+   Acceptance gates check whether the average metric scores meet pre-set
+   minimums.  The report includes confidence intervals, not just point estimates.
+
+6. **Block or flag on integrity / confidence failure**
+   Red-flag checks look for scope violations, version mismatches, and
+   non-reproducible scoring.  If any gate fails or red flags are found,
+   the pipeline sets blocked=True so the caller can halt a release.
+
+Decoupled design
+----------------
+The pipeline is wired through two plain callables:
+  - runner(sample) -> str       Your target system (called unchanged).
+  - scorer(sample, output) -> ScoreResult    Your metrics (via Orchestrator).
+
+This means you can swap in any AI system or scoring strategy without touching
+the governance logic.
+"""
 
 from __future__ import annotations
 

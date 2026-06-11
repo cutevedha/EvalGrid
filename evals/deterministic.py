@@ -1,5 +1,21 @@
-# Deterministic Evaluators - Exact matching and pattern-based metrics
-# Fast, dependency-free evaluation using string matching and regex patterns
+"""
+evals/deterministic.py: Fast, rule-based evaluation metrics.
+
+These evaluators are "deterministic" because they always give the same answer
+for the same inputs: there is no randomness or AI involved.  They are also very
+fast because they only use basic string operations, with no external API calls.
+
+When to use these
+-----------------
+Use deterministic metrics when you have a clear, objective definition of correctness:
+- The AI must output an exact phrase or number.
+- The output must contain (or must NOT contain) specific keywords.
+- The response must start or end with a specific string.
+- The output length must be within a word or character count range.
+
+These are the cheapest metrics to run, so they are always included in hybrid
+evaluation pipelines as a first filter before calling more expensive LLM judges.
+"""
 
 from core.scoring import exact_match, substring_match, case_insensitive_match, numeric_tolerance
 from core.metric_registry import register_metric

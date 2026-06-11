@@ -25,7 +25,7 @@ def new_run_id(prefix: str = "run") -> str:
 
 
 def content_hash(value: Any) -> str:
-    """Stable SHA-256 of any JSON-serialisable value — the basis of immutable versioning."""
+    """Stable SHA-256 of any JSON-serialisable value: the basis of immutable versioning."""
     payload = json.dumps(value, sort_keys=True, default=str, ensure_ascii=False)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 

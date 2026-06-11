@@ -20,7 +20,7 @@ from governance.metric_spec import bootstrap_ci
 
 @dataclass
 class RunManifest:
-    """The version stamps that make a result reproducible — required on every report."""
+    """The version stamps that make a result reproducible: required on every report."""
     run_id: str
     model: str
     dataset_version: str
@@ -53,7 +53,7 @@ def build_governance_report(
         results: list of EvalResult dicts (test_id, passed, scores, notes).
         meta: optional per-test metadata (test_id -> {severity, capability, ...}) for subgroups.
         subgroup_keys: metadata keys to break performance down by.
-        expected_total: how many samples *should* be present — if results is fewer, the
+        expected_total: how many samples *should* be present: if results is fewer, the
             report flags the shortfall instead of silently reporting on a subset.
 
     Returns:
@@ -138,14 +138,14 @@ def render_markdown(report: Dict[str, Any]) -> str:
     """Render a governed report to Markdown with raw and interpreted sections separated."""
     m, raw, interp = report["manifest"], report["raw"], report["interpretation"]
     lines = [
-        f"# Governed Evaluation Report — {m['run_id']}",
+        f"# Governed Evaluation Report: {m['run_id']}",
         "",
-        f"_Model `{m['model']}` · dataset `{m['dataset_version'][:12]}` · "
-        f"judge `{m['judge_version']}` · {m['timestamp']}_",
+        f"_Model `{m['model']}` , dataset `{m['dataset_version'][:12]}` , "
+        f"judge `{m['judge_version']}` , {m['timestamp']}_",
         "",
         "## Raw results (uninterpreted)",
-        f"- Total: **{raw['total']}** · Passed: **{raw['passed']}** · Failed: **{raw['failed']}**",
-        f"- Success rate: **{raw['success_rate']:.1%}** · Failure rate: **{raw['failure_rate']:.1%}**",
+        f"- Total: **{raw['total']}** , Passed: **{raw['passed']}** , Failed: **{raw['failed']}**",
+        f"- Success rate: **{raw['success_rate']:.1%}** , Failure rate: **{raw['failure_rate']:.1%}**",
         f"- Missing/malformed: **{raw['missing_or_malformed']}**",
         "",
         "## Interpretation (separate from raw)",

@@ -47,14 +47,14 @@ class FallbackBehaviorEvaluator(BaseMetric):
 
         Args:
             fallback_triggered: Whether the AI component failed and a fallback was used
-            fallback_quality: Quality score of the fallback response (0.0–1.0)
+            fallback_quality: Quality score of the fallback response (0.0-1.0)
 
         Returns:
             1.0 for normal operation, fallback_quality when fallback was used
         """
         if fallback_triggered:
             return fallback_quality  # Partial credit for a graceful degradation
-        return 1.0  # No fallback needed — full marks
+        return 1.0  # No fallback needed: full marks
 
 
 class IntegrationCorrectnessEvaluator(BaseMetric):
@@ -106,13 +106,13 @@ def resource_utilization(test_case, actual_output, memory_mb: float = None, cpu_
 
     Args:
         memory_mb: Peak memory usage in megabytes
-        cpu_percent: Peak CPU usage as a percentage (0–100)
+        cpu_percent: Peak CPU usage as a percentage (0-100)
     """
     if memory_mb is None or cpu_percent is None:
         return {"resource_utilization": 0.5}
 
-    memory_score = max(0.0, 1.0 - (memory_mb / 1000.0))   # 0 MB → 1.0, 1 000 MB → 0.0
-    cpu_score    = max(0.0, 1.0 - (cpu_percent / 100.0))   # 0% → 1.0, 100% → 0.0
+    memory_score = max(0.0, 1.0 - (memory_mb / 1000.0))   # 0 MB -> 1.0, 1 000 MB -> 0.0
+    cpu_score    = max(0.0, 1.0 - (cpu_percent / 100.0))   # 0% -> 1.0, 100% -> 0.0
     avg_score    = (memory_score + cpu_score) / 2.0
     return {"resource_utilization": avg_score}
 
@@ -127,7 +127,7 @@ def model_size_efficiency(test_case, actual_output, model_size_mb: float = None,
 
     Args:
         model_size_mb: Size of the deployed model in megabytes
-        quality_score: Quality score of the model's outputs (0.0–1.0)
+        quality_score: Quality score of the model's outputs (0.0-1.0)
     """
     if model_size_mb is None or quality_score is None:
         return {"model_size_efficiency": 0.5}
@@ -165,7 +165,7 @@ def error_recovery(test_case, actual_output, errors_encountered: int = 0, errors
         errors_recovered: Number of errors the system handled without crashing
     """
     if errors_encountered == 0:
-        return {"error_recovery": 1.0}  # No errors — perfect score
+        return {"error_recovery": 1.0}  # No errors: perfect score
 
     recovery_rate = errors_recovered / errors_encountered if errors_encountered > 0 else 0.0
     return {"error_recovery": recovery_rate}

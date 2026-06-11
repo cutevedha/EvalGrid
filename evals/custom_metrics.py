@@ -7,7 +7,7 @@ from typing import Callable, Optional, List, Any
 
 
 # ============================================================================
-# CUSTOM METRIC WRAPPER (FUNCTION → CLASS BRIDGE)
+# CUSTOM METRIC WRAPPER (FUNCTION -> CLASS BRIDGE)
 # ============================================================================
 
 class CustomMetric(BaseMetric):

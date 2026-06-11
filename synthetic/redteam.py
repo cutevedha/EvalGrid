@@ -1,3 +1,22 @@
+"""
+synthetic/redteam.py: Pre-built adversarial attack inputs for red-teaming AI systems.
+
+Red-teaming is the practice of deliberately trying to make an AI system fail,
+to discover weaknesses before real users or attackers do.
+
+This module provides:
+  - ATTACK_CATEGORIES: a catalogue of adversarial prompt libraries, organised by
+    attack type (prompt injection, jailbreak, PII extraction, etc.).
+  - generate_redteam_cases(): returns a flat list of TestCase-like dicts ready to
+    feed into the Orchestrator or the GovernancePipeline.
+  - generate_category_attacks(): pick attacks from one category by name.
+  - paraphrase_attack() / add_noise_to_attack(): mutators the EvalAgent uses to
+    create harder variants of inputs that the target already resisted once.
+
+The attack library is intentionally broad.  Not every attack will succeed against
+every AI: the goal is comprehensive coverage, not guaranteed exploits.
+"""
+
 from typing import List, Dict, Any
 import random
 import re

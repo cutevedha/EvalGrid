@@ -188,7 +188,7 @@ class ContextRetentionEvaluator(BaseMetric):
             Score between 0.0 and 1.0
         """
         if not conversation_history or len(conversation_history) < 2:
-            return 1.0  # Only one turn — nothing to retain
+            return 1.0  # Only one turn: nothing to retain
 
         first_message = conversation_history[0].get("content", "").lower()
         last_message = conversation_history[-1].get("content", "").lower()
@@ -328,3 +328,82 @@ def action_diversity(test_case: TestCase, actual_output: str, agent_trace: Agent
     unique_actions = len(set(step.action for step in agent_trace.steps))
     total_actions = len(agent_trace.steps)
     return {"action_diversity": unique_actions / total_actions if total_actions > 0 else 0.0}
+
+
+# ============================================================================
+# AGENT BEHAVIOR — OPERATIONAL METRICS
+# ============================================================================
+
+@register_metric("tool_call_error_rate", description="Fraction of tool calls that succeeded (1.0 = zero errors)", tags=["agent"], capabilities=["agent", "tool_use"])
+def tool_call_error_rate(test_case: TestCase, actual_output: str, agent_trace: AgentTrace = None):
+    """
+    1.0 - (errored_tool_calls / total_tool_calls).
+
+    A tool call is considered errored when its actual_result starts with 'Error'.
+    Returns 1.0 (perfect) when no tool calls are present so traces without tools are not penalised.
+    """
+    if not agent_trace or not agent_trace.steps:
+        return {"tool_call_error_rate": 1.0}
+    all_calls = [tc for step in agent_trace.steps for tc in step.tool_calls]
+    if not all_calls:
+        return {"tool_call_error_rate": 1.0}
+    errored = sum(
+        1 for call in all_calls
+        if call.actual_result is not None and str(call.actual_result).startswith("Error")
+    )
+    return {"tool_call_error_rate": 1.0 - (errored / len(all_calls))}
+
+
+@register_metric("llm_calls_per_task", description="LLM calls within budget (1.0 = at or under max_calls)", tags=["agent"], capabilities=["agent"])
+def llm_calls_per_task(test_case: TestCase, actual_output: str, llm_call_count: int = None, max_calls: int = 20):
+    """
+    Budget compliance for LLM invocations per completed task.
+
+    Returns 1.0 when call count is within budget, linearly decreasing to 0.0
+    at twice the budget. Expensive chains inflate latency and cost.
+    """
+    if llm_call_count is None:
+        return {"llm_calls_per_task": 0.0}
+    if llm_call_count <= max_calls:
+        return {"llm_calls_per_task": 1.0}
+    return {"llm_calls_per_task": max(0.0, 1.0 - (llm_call_count - max_calls) / max_calls)}
+
+
+@register_metric("tokens_per_task", description="Token budget compliance per completed task (1.0 = within budget)", tags=["agent"], capabilities=["agent"])
+def tokens_per_task(test_case: TestCase, actual_output: str, total_tokens: int = None, token_budget: int = 8000):
+    """
+    Total tokens (input + output) consumed for a single completed task.
+
+    Returns 1.0 when within budget, linearly decreasing to 0.0 at twice the budget.
+    """
+    if total_tokens is None:
+        return {"tokens_per_task": 0.0}
+    if total_tokens <= token_budget:
+        return {"tokens_per_task": 1.0}
+    return {"tokens_per_task": max(0.0, 1.0 - (total_tokens - token_budget) / token_budget)}
+
+
+@register_metric("context_window_utilization", description="Fraction of the context window that is occupied", tags=["agent", "performance"], capabilities=["agent", "generation"])
+def context_window_utilization(test_case: TestCase, actual_output: str, tokens_used: int = None, context_window_size: int = 128000):
+    """
+    tokens_used / context_window_size.
+
+    Values approaching 1.0 risk hitting the limit mid-task and triggering truncation or errors.
+    """
+    if tokens_used is None or context_window_size == 0:
+        return {"context_window_utilization": 0.0}
+    return {"context_window_utilization": min(1.0, tokens_used / context_window_size)}
+
+
+@register_metric("max_iteration_reached", description="1.0 if agent hit the step limit, 0.0 if it finished cleanly", tags=["agent"], capabilities=["agent"])
+def max_iteration_reached(test_case: TestCase, actual_output: str, agent_trace: AgentTrace = None, max_steps: int = 10):
+    """
+    Flags tasks where the agent exhausted its step budget without completing.
+
+    A value of 1.0 indicates the agent was forcibly stopped, which usually means
+    it is stuck or the task is under-specified. Complements loop_detection.
+    """
+    if not agent_trace or not agent_trace.steps:
+        return {"max_iteration_reached": 0.0}
+    hit_limit = len(agent_trace.steps) >= max_steps and not agent_trace.success
+    return {"max_iteration_reached": 1.0 if hit_limit else 0.0}

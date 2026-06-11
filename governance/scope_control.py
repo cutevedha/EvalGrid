@@ -2,7 +2,7 @@
 # Enforces the central invariant: the framework MEASURES the target, it never MODIFIES it.
 # Nothing here touches the target's prompts, weights, tools, or outputs. It only observes,
 # hashes, and (when a normalization is genuinely needed for scoring) makes it reversible
-# and logged — so observation never changes what the target actually produced.
+# and logged: so observation never changes what the target actually produced.
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from governance.audit import AuditLog, content_hash
 @dataclass
 class EvalObjective:
     """
-    The explicit objective of a test suite — required so a suite can never run "blind".
+    The explicit objective of a test suite: required so a suite can never run "blind".
 
     Components are intentionally separate concerns: ``generation`` (how cases are made),
     ``scoring`` (how outputs are judged) and ``reporting`` (how results are shown) are
@@ -46,7 +46,7 @@ class ScopeGuard:
     Records an immutable fingerprint of every target output the moment it is received,
     so the framework can later *prove* it scored exactly what the model produced.
 
-    This is observation only — it returns the output unchanged. ``verify_unmodified``
+    This is observation only: it returns the output unchanged. ``verify_unmodified``
     lets any downstream stage assert the output it holds matches what the target emitted.
     """
 
@@ -89,7 +89,7 @@ class ReversibleTransform:
     Wraps a text normalization (lowercasing, whitespace collapse, JSON pretty-print…) so
     that every application stores the original alongside the result.
 
-    Crucially, transforms here are used for *scoring inputs*, never written back to the
+    Note: transforms here are used for *scoring inputs*, never written back to the
     target. ``revert`` reconstructs the original for any record, so no transformation is
     ever lossy or hidden.
     """

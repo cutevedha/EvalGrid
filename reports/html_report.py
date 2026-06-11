@@ -1,9 +1,31 @@
-# HTML Report - Exports evaluation results to rich interactive HTML dashboards
-# Provides both a minimal table (save_html) and a full styled dashboard (generate_rich_html_report)
+"""
+reports/html_report.py: Export evaluation results as interactive HTML dashboards.
 
+Provides two output styles:
+- save_html()                : a minimal, dependency-free HTML table.  Useful for
+                                quick inspection or embedding in other pages.
+- generate_rich_html_report(): a full styled dashboard with colour-coded pass/fail
+                                rows, metric score columns, and a summary header.
+                                Self-contained (no external CSS/JS dependencies).
+
+The HTML files can be opened directly in any web browser with no server needed.
+"""
+
+from html import escape
 from pathlib import Path
 from typing import List, Dict, Any
-import json
+
+
+def _h(value: Any) -> str:
+    """
+    Escape a value for safe inclusion in HTML.
+
+    Test IDs, scores and other fields can carry evaluation inputs or model output
+    (including red-team attack strings). Escaping every interpolated value before it
+    reaches the HTML prevents stored cross-site scripting when the report is opened
+    in a browser.
+    """
+    return escape(str(value), quote=True)
 
 
 # ============================================================================
@@ -28,9 +50,9 @@ def save_html(results, path):
     for r in results:
         rows.append(
             f"<tr>"
-            f"<td>{r.get('test_id')}</td>"
-            f"<td>{r.get('passed')}</td>"
-            f"<td>{r.get('scores')}</td>"
+            f"<td>{_h(r.get('test_id'))}</td>"
+            f"<td>{_h(r.get('passed'))}</td>"
+            f"<td>{_h(r.get('scores'))}</td>"
             f"</tr>"
         )
 
@@ -42,7 +64,7 @@ def save_html(results, path):
         f"{''.join(rows)}"
         f"</table></body></html>"
     )
-    Path(path).write_text(html)
+    Path(path).write_text(html, encoding="utf-8")
     return path
 
 
@@ -116,7 +138,7 @@ def generate_rich_html_report(results: List[Dict[str, Any]], path: str, title: s
     for metric_name, stats in metric_summaries.items():
         metric_rows.append(f"""
         <tr>
-            <td>{metric_name}</td>
+            <td>{_h(metric_name)}</td>
             <td>{stats['mean']:.3f}</td>
             <td>{stats['min']:.3f}</td>
             <td>{stats['max']:.3f}</td>
@@ -146,10 +168,10 @@ def generate_rich_html_report(results: List[Dict[str, Any]], path: str, title: s
             if r.get('passed')
             else '<span style="color: red;">&#10007; FAIL</span>'
         )
-        scores_html = '<br>'.join([f"{k}: {v:.3f}" for k, v in r.get('scores', {}).items()])
+        scores_html = '<br>'.join([f"{_h(k)}: {v:.3f}" for k, v in r.get('scores', {}).items()])
         test_rows.append(f"""
         <tr>
-            <td>{r.get('test_id')}</td>
+            <td>{_h(r.get('test_id'))}</td>
             <td>{status}</td>
             <td>{scores_html}</td>
         </tr>
@@ -191,15 +213,16 @@ def generate_rich_html_report(results: List[Dict[str, Any]], path: str, title: s
     """
 
     # ── Assemble the full HTML document ───────────────────────────────────────
+    safe_title = _h(title)
     html = f"""
     <!DOCTYPE html>
     <html>
     <head>
-        <title>{title}</title>
+        <title>{safe_title}</title>
         {css}
     </head>
     <body>
-        <h1>{title}</h1>
+        <h1>{safe_title}</h1>
         {summary_cards}
         {metrics_table}
         {tests_table}
@@ -207,6 +230,6 @@ def generate_rich_html_report(results: List[Dict[str, Any]], path: str, title: s
     </html>
     """
 
-    Path(path).write_text(html)
+    Path(path).write_text(html, encoding="utf-8")
     return path
 

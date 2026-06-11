@@ -1,5 +1,30 @@
-# Semantic Evaluators - Similarity-based metrics with pluggable embedders
-# Evaluates semantic similarity between outputs using various algorithms
+"""
+evals/semantic.py: Meaning-based evaluation metrics.
+
+While deterministic metrics check exact text matches, semantic metrics ask
+"does this answer *mean* the same thing as the expected answer?"
+
+For example, "The sky is azure" and "The sky is blue" score 0 on exact match
+but should score high on semantic similarity.
+
+Algorithms available
+--------------------
+- **Embedding similarity**: converts both texts into numeric vectors using a
+  language model, then measures the angle between the vectors.  Pluggable:
+  swap in any embedder (local sentence-transformers, OpenAI API, etc.).
+- BLEU: counts shared short phrases (n-grams).  Classic NLP metric
+  originally designed for machine translation.
+- **ROUGE-L**: finds the longest common word sequence.  Great for summaries.
+- **F1 token overlap**: balanced precision + recall over individual words.
+- **Jaccard similarity**: fraction of shared words (set overlap).
+
+All scores are in the range 0.0 - 1.0.
+
+Plugging in a custom embedder
+------------------------------
+    from evals.semantic import set_embedder, SentenceTransformerEmbedder
+    set_embedder(SentenceTransformerEmbedder("all-MiniLM-L6-v2"))
+"""
 
 from core.scoring import simple_similarity, bleu_score, rouge_l, f1_token_overlap
 from core.metric_registry import register_metric
@@ -124,7 +149,7 @@ def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
     """
     Calculate cosine similarity between two vectors
 
-    Cosine similarity = (A · B) / (||A|| * ||B||)
+    Cosine similarity = (A , B) / (||A|| * ||B||)
     Range: -1 to 1 (typically 0 to 1 for embeddings)
 
     Args:

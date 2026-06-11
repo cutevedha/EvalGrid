@@ -1,5 +1,32 @@
-# Hallucination Detection - Identifies unsupported or fabricated content
-# Detects when AI outputs information not grounded in provided context or facts
+"""
+guards/hallucination.py: Detect AI "hallucinations" (made-up or unsupported content).
+
+AI models sometimes generate plausible-sounding but factually incorrect or
+fabricated information.  This is called a hallucination.
+
+This guard measures hallucination risk using three complementary approaches:
+
+1. **Token overlap against context** (detect_hallucination)
+   What fraction of words in the AI's output also appear in the provided
+   source context?  A low fraction suggests the model invented information
+   not present in the context.
+
+2. **Entity presence check** (entity_presence_check)
+   Were the specific named entities (people, places, numbers) that should
+   appear in the answer actually mentioned?
+
+3. **Factual consistency check** (factual_consistency_check)
+   Are the known facts included in the answer?
+
+4. **Contradiction detection** (contradiction_detection)
+   Does the answer include negations of facts we know to be true?
+
+5. **Specificity / vagueness checks**
+   Vague, hedging language ("maybe", "perhaps", "might") often signals
+   low confidence and is a proxy for hallucination risk.
+
+All functions return 0.0 - 1.0 where higher means LESS hallucination (better).
+"""
 
 from core.metric_registry import register_metric
 from typing import List, Optional

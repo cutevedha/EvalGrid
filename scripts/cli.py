@@ -1,5 +1,44 @@
-# CLI Interface for EvalGrid
-# Provides command-line interface for running evaluations and generating reports
+"""
+scripts/cli.py: Command-line interface for EvalGrid.
+
+This is the main entry point when you run  eval-grid  from your terminal.
+
+Available commands
+------------------
+run-demo
+    Run a built-in demo evaluation with sample test cases.
+    Produces: scorecard.csv, report.html, run_results.json, report.md
+
+run
+    Evaluate a specific project's test cases.
+    Use --project, --capability, --concurrency to control the run.
+
+auto
+    Autonomous evaluation: give the agent a plain-English goal and it plans
+    its own probes, drives the target, adapts to findings, and reports back.
+    Exits with code 1 if the verdict is FAIL: safe to use as a CI gate.
+
+govern
+    Governed evaluation: runs the 6-step GovernancePipeline with data-integrity
+    checks, acceptance gates, and an audit trail.  Blocks the release on failure.
+
+list-metrics
+    Print all registered evaluation metrics with their descriptions.
+    Supports --tag and --capability filters.
+
+export
+    Convert a saved results JSON file to another format (csv, json, html, markdown).
+
+compare
+    Compare two evaluation runs and report whether quality improved or regressed.
+
+Typical workflow
+----------------
+    eval-grid run-demo                      # try it out with no setup
+    eval-grid auto --goal "safety" --target anthropic
+    eval-grid govern --goal "safety" --target mock
+    eval-grid list-metrics --tag safety
+"""
 
 import argparse
 import json
@@ -240,7 +279,7 @@ def _run_govern(args):
 
     Drives the target UNCHANGED, scores with the Orchestrator, applies pre-set acceptance
     gates + integrity/red-flag checks, writes a governed report (raw vs interpreted), and
-    exits non-zero if the run is blocked — so governance can gate a release.
+    exits non-zero if the run is blocked: so governance can gate a release.
     """
     from core.schemas import TestCase
     from core.orchestrator import Orchestrator
@@ -264,7 +303,7 @@ def _run_govern(args):
             for c in generate_redteam_cases()
         ]
 
-    print(f"Governed evaluation of '{target.name}' — objective: {args.goal}")
+    print(f"Governed evaluation of '{target.name}': objective: {args.goal}")
     print(f"Samples: {len(samples)} | min required: {args.min_samples}")
 
     orch = Orchestrator()

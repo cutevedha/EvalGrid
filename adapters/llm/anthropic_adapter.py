@@ -1,5 +1,27 @@
-# Anthropic Adapter - Async client for the Anthropic Messages API (Claude models)
-# Requires: pip install anthropic
+"""
+adapters/llm/anthropic_adapter.py: Connect EvalGrid to Anthropic's Claude models.
+
+Installation
+------------
+    pip install anthropic
+
+Authentication
+--------------
+Pass api_key= explicitly, or set the ANTHROPIC_API_KEY environment variable and
+leave api_key=None (the Anthropic SDK picks it up automatically).
+
+Usage
+-----
+    from adapters.llm.anthropic_adapter import AnthropicAdapter
+    client = AnthropicAdapter(model="claude-sonnet-4-6")
+    response = client.generate_sync("What is 2 + 2?")
+
+Note on embeddings
+------------------
+Anthropic does not currently expose a public embedding API endpoint.
+embed() returns an empty list; use a different embedder (e.g. OpenAIEmbedder
+from evals/semantic.py) if you need semantic similarity metrics.
+"""
 
 from typing import List, Dict
 import asyncio

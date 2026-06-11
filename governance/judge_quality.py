@@ -154,7 +154,7 @@ class HumanOverride:
     A human override path for high-impact decisions.
 
     Overrides are recorded (and audited) so the final verdict on a contested sample can be
-    set by a person — and that intervention is itself fully traceable.
+    set by a person: and that intervention is itself fully traceable.
     """
 
     def __init__(self, audit: Optional[AuditLog] = None):

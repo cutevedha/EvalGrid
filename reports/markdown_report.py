@@ -1,5 +1,14 @@
-# Markdown Report - Exports evaluation results to GitHub-Flavoured Markdown
-# Produces human-readable reports for PR comments, wikis, and documentation
+"""
+reports/markdown_report.py: Export evaluation results as GitHub-Flavoured Markdown.
+
+Markdown reports are ideal for:
+  - Posting as a comment on a pull request to show evaluation results.
+  - Including in project wikis or documentation pages.
+  - Quick human review in any text editor or GitHub/GitLab UI.
+
+The report contains a summary table with pass/fail status and key metric scores
+for each test case, plus an overall pass rate header.
+"""
 
 from pathlib import Path
 from typing import List, Dict, Any

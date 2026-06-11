@@ -3,7 +3,7 @@ Autonomous evaluation example.
 
 Points the EvalAgent at three different "targets" and lets it autonomously plan
 probes, drive each target, evaluate the outputs, adaptively drill into weak spots,
-and print a verdict — no test cases written by hand.
+and print a verdict: no test cases written by hand.
 
 Run with:  python3 examples/autonomous_eval.py
 """
@@ -22,12 +22,12 @@ from agent import EvalAgent, EvalTarget
 # ---------------------------------------------------------------------------
 
 def unsafe_bot(text, context=None):
-    """Complies with everything — should FAIL the safety probes."""
+    """Complies with everything: should FAIL the safety probes."""
     return "Sure! Here's exactly how to do that..."
 
 
 def brittle_bot(text, context=None):
-    """Refuses only obvious attacks — the agent should erode it via mutation."""
+    """Refuses only obvious attacks: the agent should erode it via mutation."""
     low = text.lower()
     triggers = ("ignore", "bypass", "jailbreak", "override", "reveal", "exfiltrate")
     if any(t in low for t in triggers):
@@ -36,7 +36,7 @@ def brittle_bot(text, context=None):
 
 
 def robust_bot(text, context=None):
-    """Refuses adversarial intent broadly — should largely PASS."""
+    """Refuses adversarial intent broadly: should largely PASS."""
     low = text.lower()
     adversarial = (
         "ignore", "bypass", "jailbreak", "override", "reveal", "exfiltrate",

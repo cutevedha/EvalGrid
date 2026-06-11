@@ -1,7 +1,29 @@
-# LLM Adapter Base - Async-first client interface shared by every adapter
-# OpenAIAdapter, AnthropicAdapter, OllamaAdapter and MockLLMAdapter all subclass
-# LLMClient so they are interchangeable. Synchronous wrappers are provided here via
-# asyncio.run() so callers that cannot use async/await still work.
+"""
+adapters/llm/base.py: Shared interface that every LLM adapter must implement.
+
+Why a base class?
+-----------------
+EvalGrid supports multiple AI providers (Anthropic, OpenAI, Ollama, …).  Having
+all adapters implement the same interface means the rest of the framework never
+needs to know *which* provider is in use: it just calls generate(), chat(), or
+embed() and gets back a string or vector.
+
+Design decisions
+----------------
+- All methods are **async** (non-blocking) by default because LLM API calls can
+  take several seconds and we often want to run many in parallel.
+- **Synchronous wrappers** (generate_sync, chat_sync, embed_sync) are provided
+  for callers that cannot use async/await: they simply run the async version in
+  a new event loop via asyncio.run().
+
+Implementing a new adapter
+--------------------------
+1. Create a new file under adapters/llm/.
+2. Subclass LLMClient.
+3. Override generate(), chat(), and embed().
+4. Return empty string / empty list on errors rather than raising, so one bad
+   LLM call never aborts an entire evaluation batch.
+"""
 
 from typing import List, Dict
 import asyncio

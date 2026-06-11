@@ -26,7 +26,7 @@ _RED_FLAG_TEXT = {
     "judge_leakage": "The judge prompt contained hidden hints or leaked reference answers.",
     "silent_version_change": "Results changed without a version bump (content hash mismatch).",
     "no_error_bars": "Success rates were reported without error bars or failure examples.",
-    "irreproducible_score": "Scoring is not reproducible — a reviewer cannot reproduce the final score.",
+    "irreproducible_score": "Scoring is not reproducible: a reviewer cannot reproduce the final score.",
 }
 
 
@@ -39,13 +39,13 @@ def scan_red_flags(context: Dict[str, Any]) -> List[RedFlag]:
     Inspect a run's evidence and return any triggered red flags.
 
     Expected context keys (all optional; absent = treated as safe where sensible):
-        scope_violations        int  — times the target output changed after capture
-        prompts_modified        bool — framework altered target prompts/outputs
-        judge_reference_leaks   int  — judge prompts found leaking the gold answer
-        version_mismatch        bool — recomputed hash != recorded version id
-        report_has_error_bars   bool — report includes CIs / uncertainty
-        report_has_failures     bool — report includes concrete failure examples
-        scoring_reproducible    bool — identical inputs reproduce identical scores
+        scope_violations        int : times the target output changed after capture
+        prompts_modified        bool: framework altered target prompts/outputs
+        judge_reference_leaks   int : judge prompts found leaking the gold answer
+        version_mismatch        bool: recomputed hash != recorded version id
+        report_has_error_bars   bool: report includes CIs / uncertainty
+        report_has_failures     bool: report includes concrete failure examples
+        scoring_reproducible    bool: identical inputs reproduce identical scores
     """
     flags: List[RedFlag] = []
 

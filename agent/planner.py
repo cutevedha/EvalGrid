@@ -1,7 +1,36 @@
-# Eval Planner - Turns a natural-language goal into a concrete evaluation plan
-# The planner is the "reasoning" step of the autonomous agent: given what the user
-# wants to find out and which capabilities the target exposes, it selects a set of
-# probes (themed batches of test cases) along with the metrics that gate each one.
+"""
+agent/planner.py: Translates a plain-English goal into a concrete evaluation plan.
+
+What does the planner do?
+--------------------------
+The EvalAgent's first step is planning.  The planner takes:
+  - A natural-language goal, e.g. "test whether the support bot is safe"
+  - The capabilities the target AI exposes, e.g. ["generation", "rag"]
+
+…and produces an EvalPlan: a list of ProbeSpecs (themed batches of tests) plus
+the metrics that must pass for each probe.
+
+Two types of probes
+-------------------
+1. **Functional probes**: one per declared capability.
+   Check that the AI does its job correctly and safely under normal use.
+
+2. **Red-team probes**: derived from keywords in the goal.
+   Adversarial probes designed to find safety weaknesses.
+   E.g. the word "safety" triggers probes for prompt injection and jailbreaks.
+
+Gate metrics
+------------
+Each probe carries a dict of gate_metrics: a metric name -> minimum score.
+A test case passes only when every gate metric clears its threshold.
+The three built-in gate bundles are:
+  FUNCTIONAL_SAFE: policy compliance only.
+  GROUNDED_GATE  : policy + basic groundedness (no hallucination).
+  ADVERSARIAL_GATE: policy + refusal (the target must refuse the attack).
+
+The planner runs fully offline by default (deterministic keyword matching).
+Pass a reasoner LLM client to get richer, domain-specific seed inputs.
+"""
 
 from __future__ import annotations
 
@@ -53,7 +82,7 @@ class EvalPlan:
 # PLANNER
 # ============================================================================
 
-# Reference-free gates — these need no gold answer, so they can gate any target.
+# Reference-free gates: these need no gold answer, so they can gate any target.
 # Keys are EvalResult.scores entries; values are minimum acceptable scores.
 #   policy_safe -> output must not contain blocked phrases
 #   judge_groundedness -> output must be reasonably grounded

@@ -149,7 +149,7 @@ def test_agent_runs_full_applicable_metric_suite():
 
 def test_metric_applicability_is_dynamic_with_data():
     # The applicability decision is driven purely by signature introspection vs. available
-    # data — a metric that is inapplicable on a plain case becomes applicable once the test
+    # data: a metric that is inapplicable on a plain case becomes applicable once the test
     # case carries the data it needs (here: retrieved_chunks). No hardcoded lists involved.
     from agent.agent import _build_data_bundle, _metric_call_pull, _ensure_all_metrics_registered
     from core.metric_registry import MetricRegistry
@@ -177,7 +177,7 @@ def test_gate_only_mode_keeps_minimal_metrics():
 
 def test_agent_html_report_renders(tmp_path):
     # The agent-aware HTML report should write a file containing the verdict,
-    # round headings, and a findings table — and must HTML-escape attack inputs.
+    # round headings, and a findings table: and must HTML-escape attack inputs.
     from reports.agent_html_report import generate_agent_html_report
 
     target = EvalTarget.from_callable(lambda t, c=None: "Sure, here's how...", name="unsafe")

@@ -1,9 +1,19 @@
-# Policy Guard - Content policy enforcement for AI outputs
-# Blocks outputs that contain phrases associated with safety violations
+"""
+guards/policy.py: Content policy enforcement: the first line of defence.
 
-# ============================================================================
-# BLOCKED PHRASE LIST
-# ============================================================================
+This guard maintains a list of phrases that must NEVER appear in an AI's output.
+If any blocked phrase is found, policy_check() returns False, which causes the
+Orchestrator to mark that test case as FAILED regardless of any other scores.
+
+Adding new blocked phrases
+--------------------------
+Simply append to the BLOCKED_PHRASES list below.  Phrases are matched
+case-insensitively, so "steal" blocks "Steal", "STEAL", etc.
+
+This is an intentionally simple blocklist approach.  For more sophisticated
+content moderation, consider plugging in the toxicity guard (guards/toxicity.py)
+or an external moderation API.
+"""
 
 # Phrases that must never appear in an AI output.
 # Any match causes policy_check() to return False (policy violated).

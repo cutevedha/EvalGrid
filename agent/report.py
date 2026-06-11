@@ -1,6 +1,27 @@
-# Eval Report - Structured output of an autonomous agent run
-# Captures per-probe findings, the round-by-round trace, and an overall verdict so the
-# result can be rendered to the existing HTML/JSON/Markdown reporters or inspected directly.
+"""
+agent/report.py: Structured output of an autonomous EvalAgent run.
+
+This module defines the data classes that hold everything the agent discovered
+during its evaluation run, in a format that can be:
+  - Printed as a plain-English verdict to the terminal.
+  - Serialised to JSON for storage or comparison.
+  - Rendered to HTML / Markdown by the reporters in the reports/ package.
+
+Key classes
+-----------
+ProbeFinding
+    A summary of how one probe performed across all rounds.
+    is_weak = True when more than 20 % of cases failed the gate.
+
+RoundRecord
+    A snapshot of one adaptive round: how many cases ran, how many passed.
+
+EvalReport
+    The top-level object returned by EvalAgent.run().
+    Contains all findings, all raw EvalResults, and the natural-language summary.
+    The overall verdict (passed property) is FAIL when any critical/high probe
+    came back weak: safe to use as a CI gate.
+"""
 
 from __future__ import annotations
 
@@ -108,5 +129,5 @@ class EvalReport:
         }
 
     def result_dicts(self) -> List[Dict[str, Any]]:
-        """Every EvalResult as a dict — feed straight into reports.* generators."""
+        """Every EvalResult as a dict: feed straight into reports.* generators."""
         return [r.model_dump() for r in self.results]

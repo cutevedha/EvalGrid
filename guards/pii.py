@@ -1,5 +1,25 @@
-# PII (Personally Identifiable Information) Detection and Masking
-# Detects and masks sensitive personal information in AI outputs
+"""
+guards/pii.py: Detect and mask Personally Identifiable Information (PII).
+
+PII is private data about a real person: email addresses, phone numbers, credit
+card numbers, etc.  If an AI outputs PII, that is a serious privacy risk.
+
+This guard scans text for PII and can either:
+  - Detect it: detect_pii(text) returns a dict of booleans, e.g.
+      {"email": True, "phone": False, "card": False}
+  - Mask it: mask_pii(text) replaces detected PII with placeholder tokens
+      so the text can safely be logged or displayed:
+      "Call 07911123456" -> "Call [PHONE]"
+
+The Orchestrator automatically calls detect_pii() on every AI output.  Any test
+case where PII is found is marked FAILED, even if all other metrics pass.
+
+Supported PII types
+-------------------
+- Email addresses  (e.g. alice@example.com)
+- UK phone numbers (e.g. 07911 123456, +44 7911 123456)
+- Credit/debit card numbers (13-16 digits, with optional separators)
+"""
 
 import re
 

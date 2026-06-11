@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>EvalGrid — Visual Architecture</title>
+<title>EvalGrid: Visual Architecture</title>
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
   mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose', flowchart: { useMaxWidth: true } });
@@ -35,19 +35,19 @@
 </head>
 <body>
 <header>
-  <h1>EvalGrid — Visual Architecture</h1>
-  <p>Layers · two execution flows · the autonomous agent loop · file-by-file connections</p>
+  <h1>EvalGrid: Visual Architecture</h1>
+  <p>Layers , two execution flows , the autonomous agent loop , file-by-file connections</p>
 </header>
 <main>
 
 <section>
   <h2><span class="num">1</span>The 10-second mental model</h2>
-  <p class="sub">One question — "is this AI output good?" — answered in two modes.</p>
+  <p class="sub">One question: "is this AI output good?": answered in two modes.</p>
   <ul>
-    <li><b>Classic mode:</b> you supply a <code>TestCase</code> + the AI's output → the <b>Orchestrator</b> scores it → <b>Reports</b>.</li>
-    <li><b>Autonomous mode (Eval Agent):</b> you supply a <b>goal</b> + a <b>target system</b> → the <b>EvalAgent</b> writes its own test cases, drives the target, scores outputs, adaptively red-teams weak spots, and emits a verdict → <b>Reports</b>.</li>
+    <li><b>Classic mode:</b> you supply a <code>TestCase</code> + the AI's output -> the <b>Orchestrator</b> scores it -> <b>Reports</b>.</li>
+    <li><b>Autonomous mode (Eval Agent):</b> you supply a <b>goal</b> + a <b>target system</b> -> the <b>EvalAgent</b> writes its own test cases, drives the target, scores outputs, adaptively red-teams weak spots, and emits a verdict -> <b>Reports</b>.</li>
   </ul>
-  <p>Both share one engine: <b>Orchestrator → Metric Registry → Evaluators → Guards → Scoring primitives</b>.</p>
+  <p>Both share one engine: <b>Orchestrator -> Metric Registry -> Evaluators -> Guards -> Scoring primitives</b>.</p>
 </section>
 
 <section>
@@ -123,7 +123,7 @@ graph TD
 </section>
 
 <section>
-  <h2><span class="num">3</span>Flow A — Classic evaluation</h2>
+  <h2><span class="num">3</span>Flow A: Classic evaluation</h2>
   <p class="sub">The path <code>Orchestrator.run(test_case, output)</code> takes.</p>
   <pre class="mermaid">
 sequenceDiagram
@@ -149,20 +149,20 @@ sequenceDiagram
     O-->>U: EvalResult(passed, scores, notes)
   </pre>
   <ol>
-    <li><b>Input</b> — a <code>TestCase</code> + the AI's <code>actual_output</code>.</li>
-    <li><b>Deterministic</b> — fast string/regex checks (<code>deterministic.py → scoring.py</code>).</li>
-    <li><b>Semantic</b> — meaning-based similarity (<code>semantic.py</code>, pluggable embedder).</li>
-    <li><b>Safety</b> — <code>safety.py</code> → <code>guards/policy.py</code> blocked-phrase check.</li>
-    <li><b>LLM judge</b> — real LLM if <code>set_llm_client()</code> was called, else heuristic.</li>
-    <li><b>Guards</b> — PII + prompt-injection detection.</li>
-    <li><b>Gate</b> — scores vs <code>test_case.thresholds</code>; PII is a hard fail.</li>
-    <li><b>Output</b> — an <code>EvalResult</code>.</li>
+    <li><b>Input</b>: a <code>TestCase</code> + the AI's <code>actual_output</code>.</li>
+    <li><b>Deterministic</b>: fast string/regex checks (<code>deterministic.py -> scoring.py</code>).</li>
+    <li><b>Semantic</b>: meaning-based similarity (<code>semantic.py</code>, pluggable embedder).</li>
+    <li><b>Safety</b>: <code>safety.py</code> -> <code>guards/policy.py</code> blocked-phrase check.</li>
+    <li><b>LLM judge</b>: real LLM if <code>set_llm_client()</code> was called, else heuristic.</li>
+    <li><b>Guards</b>: PII + prompt-injection detection.</li>
+    <li><b>Gate</b>: scores vs <code>test_case.thresholds</code>; PII is a hard fail.</li>
+    <li><b>Output</b>: an <code>EvalResult</code>.</li>
   </ol>
-  <div class="note"><b>The other evaluators</b> (agent, rag, multiagent, performance, robustness, bias, embedded, toxicity, hallucination) <b>register into the Metric Registry</b> on import and run on demand via <code>orchestrator.compute_metric("name", …)</code> — not in the default <code>run()</code> path.</div>
+  <div class="note"><b>The other evaluators</b> (agent, rag, multiagent, performance, robustness, bias, embedded, toxicity, hallucination) <b>register into the Metric Registry</b> on import and run on demand via <code>orchestrator.compute_metric("name", …)</code>: not in the default <code>run()</code> path.</div>
 </section>
 
 <section>
-  <h2><span class="num">4</span>Flow B — Autonomous Eval Agent</h2>
+  <h2><span class="num">4</span>Flow B: Autonomous Eval Agent</h2>
   <p class="sub">The headline feature: <code>EvalAgent.run(goal, capabilities)</code>.</p>
   <pre class="mermaid">
 flowchart TD
@@ -186,10 +186,10 @@ flowchart TD
   </pre>
   <table>
     <tr><th>#</th><th>Phase</th><th>File</th><th>What happens</th></tr>
-    <tr><td>1</td><td>Plan</td><td><code>agent/planner.py</code></td><td>Goal + capabilities → <code>ProbeSpec</code>s. Capability words add functional probes; risk words add red-team probes from <code>synthetic/redteam.py</code>.</td></tr>
+    <tr><td>1</td><td>Plan</td><td><code>agent/planner.py</code></td><td>Goal + capabilities -> <code>ProbeSpec</code>s. Capability words add functional probes; risk words add red-team probes from <code>synthetic/redteam.py</code>.</td></tr>
     <tr><td>2</td><td>Generate</td><td><code>agent/agent.py</code></td><td>Round 1 = base inputs. Later rounds <b>mutate failing inputs</b> into harder variants (redteam + augmentation).</td></tr>
     <tr><td>3</td><td>Execute</td><td><code>agent/target.py</code></td><td><code>EvalTarget</code> calls the SUT (LLM / callable / offline). Errors become <code>"Error: …"</code>.</td></tr>
-    <tr><td>4</td><td>Evaluate</td><td><code>core/orchestrator.py</code></td><td>Scored by the Orchestrator; adversarial probes add a refusal score (classifier → LLM judge → keyword).</td></tr>
+    <tr><td>4</td><td>Evaluate</td><td><code>core/orchestrator.py</code></td><td>Scored by the Orchestrator; adversarial probes add a refusal score (classifier -> LLM judge -> keyword).</td></tr>
     <tr><td>5</td><td>Record</td><td><code>agent/memory.py</code></td><td>Stores results per probe; computes pass rates + weakest metric.</td></tr>
     <tr><td>6</td><td>Reflect</td><td><code>agent/agent.py</code></td><td>Probes ≥ 0.8 pass are dropped (settled); weak ones survive. Loop ends when none remain.</td></tr>
     <tr><td>7</td><td>Report</td><td><code>agent/report.py</code></td><td>Rolls memory into <code>ProbeFinding</code>s + an <code>EvalReport</code> verdict + summary.</td></tr>
@@ -198,7 +198,7 @@ flowchart TD
 </section>
 
 <section>
-  <h2><span class="num">5</span>Data model — core/schemas.py</h2>
+  <h2><span class="num">5</span>Data model: core/schemas.py</h2>
   <p class="sub">The Pydantic models every layer speaks.</p>
   <pre class="mermaid">
 classDiagram
@@ -241,7 +241,7 @@ classDiagram
 
 <section>
   <h2><span class="num">6</span>File-by-file reference</h2>
-  <h3 style="color:var(--muted)">core/ — the foundation</h3>
+  <h3 style="color:var(--muted)">core/: the foundation</h3>
   <table>
     <tr><th>File</th><th>Role</th><th>Used by</th></tr>
     <tr><td><code>schemas.py</code></td><td>All data models</td><td>nearly everything</td></tr>
@@ -249,22 +249,22 @@ classDiagram
     <tr><td><code>metric_registry.py</code></td><td>Register / discover / compute metrics</td><td>orchestrator, evals, guards</td></tr>
     <tr><td><code>orchestrator.py</code></td><td>Runs the common metric set (sync/async/batch)</td><td>agent, pipelines, cli</td></tr>
   </table>
-  <h3 style="color:var(--muted)">agent/ — the autonomous evaluator</h3>
+  <h3 style="color:var(--muted)">agent/: the autonomous evaluator</h3>
   <table>
     <tr><th>File</th><th>Role</th><th>Imports</th></tr>
-    <tr><td><code>target.py</code></td><td><code>EvalTarget</code> — wrap any SUT as <code>run(case)→str</code></td><td>schemas</td></tr>
-    <tr><td><code>planner.py</code></td><td><code>EvalPlanner</code> — goal → probes</td><td>synthetic.redteam</td></tr>
-    <tr><td><code>memory.py</code></td><td><code>AgentMemory</code> — per-probe results &amp; findings</td><td>planner, report, schemas</td></tr>
+    <tr><td><code>target.py</code></td><td><code>EvalTarget</code>: wrap any SUT as <code>run(case)->str</code></td><td>schemas</td></tr>
+    <tr><td><code>planner.py</code></td><td><code>EvalPlanner</code>: goal -> probes</td><td>synthetic.redteam</td></tr>
+    <tr><td><code>memory.py</code></td><td><code>AgentMemory</code>: per-probe results &amp; findings</td><td>planner, report, schemas</td></tr>
     <tr><td><code>report.py</code></td><td><code>EvalReport</code>, <code>ProbeFinding</code>, <code>RoundRecord</code></td><td>schemas</td></tr>
-    <tr><td><code>agent.py</code></td><td><code>EvalAgent</code> — the full loop</td><td>orchestrator, schemas, synthetic, agent.*</td></tr>
+    <tr><td><code>agent.py</code></td><td><code>EvalAgent</code>: the full loop</td><td>orchestrator, schemas, synthetic, agent.*</td></tr>
   </table>
-  <h3 style="color:var(--muted)">evals/ — metrics (self-register on import)</h3>
+  <h3 style="color:var(--muted)">evals/: metrics (self-register on import)</h3>
   <table>
     <tr><th>File</th><th>Provides</th><th>Wired into Orchestrator.run?</th></tr>
     <tr><td><code>deterministic.py</code></td><td>exact/substring/regex/keyword/length</td><td>Yes</td></tr>
     <tr><td><code>semantic.py</code></td><td>similarity, BLEU, ROUGE-L, F1, Jaccard</td><td>Yes</td></tr>
     <tr><td><code>json_schema.py</code></td><td>valid_json, missing_keys</td><td>When expected_json set</td></tr>
-    <tr><td><code>safety.py</code></td><td>policy_safe (→ guards/policy)</td><td>Yes</td></tr>
+    <tr><td><code>safety.py</code></td><td>policy_safe (-> guards/policy)</td><td>Yes</td></tr>
     <tr><td><code>llm_judge.py</code></td><td>correctness, groundedness, fluency…</td><td>Yes</td></tr>
     <tr><td><code>agent_evals.py</code></td><td>tool-call, plan coherence, loop, task completion</td><td>Via registry</td></tr>
     <tr><td><code>rag_evals.py</code></td><td>faithfulness, context precision/recall, citations</td><td>Via registry</td></tr>
@@ -274,27 +274,27 @@ classDiagram
     <tr><td><code>bias_fairness_evals.py</code></td><td>bias, fairness, stereotype, inclusivity</td><td>Via registry</td></tr>
     <tr><td><code>embedded_ai_evals.py</code></td><td>latency budget, fallback, graceful degradation</td><td>Via registry</td></tr>
   </table>
-  <h3 style="color:var(--muted)">guards/ · side services</h3>
+  <h3 style="color:var(--muted)">guards/ , side services</h3>
   <table>
     <tr><th>File</th><th>Role</th></tr>
     <tr><td><code>guards/policy.py</code></td><td>blocked-phrase check (used by evals/safety)</td></tr>
     <tr><td><code>guards/pii.py</code></td><td>detect + mask emails / phones / cards</td></tr>
     <tr><td><code>guards/prompt_injection.py</code></td><td>attack-pattern detector</td></tr>
-    <tr><td><code>guards/toxicity.py</code> · <code>hallucination.py</code></td><td>toxicity categories · token-grounding score</td></tr>
+    <tr><td><code>guards/toxicity.py</code> , <code>hallucination.py</code></td><td>toxicity categories , token-grounding score</td></tr>
     <tr><td><code>adapters/llm/base.py</code></td><td>Async <code>LLMClient</code> base interface shared by all adapters</td></tr>
     <tr><td><code>adapters/llm/{openai,anthropic,ollama}_adapter.py</code></td><td>OpenAI / Claude / local-Ollama clients (one file each)</td></tr>
-    <tr><td><code>adapters/llm/mock_target_adapter.py</code></td><td>MockLLMAdapter — no-network mock; the <code>--target mock</code> default</td></tr>
+    <tr><td><code>adapters/llm/mock_target_adapter.py</code></td><td>MockLLMAdapter: no-network mock; the <code>--target mock</code> default</td></tr>
     <tr><td><code>synthetic/redteam.py</code></td><td>10 attack categories + paraphrase/noise mutators</td></tr>
     <tr><td><code>synthetic/augmentation.py</code></td><td>typos, case, noise, adversarial variants</td></tr>
-    <tr><td><code>reports/*.py</code></td><td>render results → html / json / markdown / csv</td></tr>
-    <tr><td><code>pipelines/batch_runner.py</code></td><td>Batch · Streaming · Gating (CI gates)</td></tr>
+    <tr><td><code>reports/*.py</code></td><td>render results -> html / json / markdown / csv</td></tr>
+    <tr><td><code>pipelines/batch_runner.py</code></td><td>Batch , Streaming , Gating (CI gates)</td></tr>
     <tr><td><code>scripts/cli.py</code></td><td>the <code>eval-grid</code> command</td></tr>
   </table>
 </section>
 
 <section>
   <h2><span class="num">7</span>Where the two flows meet</h2>
-  <p class="sub">The Orchestrator is the single chokepoint — one test case or forty, everything funnels through the same engine and reporters.</p>
+  <p class="sub">The Orchestrator is the single chokepoint: one test case or forty, everything funnels through the same engine and reporters.</p>
   <pre class="mermaid">
 graph LR
     GOAL["Goal + Target"] --> AGENT["EvalAgent"]
@@ -310,7 +310,7 @@ graph LR
 
 <section>
   <h2><span class="num">8</span>Quick command reference</h2>
-  <pre class="cmd"># Autonomous agent (no API key — uses the mock target)
+  <pre class="cmd"># Autonomous agent (no API key: uses the mock target)
 python3 -m scripts.cli auto --goal "make sure the bot is safe against jailbreaks"
 
 # Classic demo suite
@@ -324,6 +324,6 @@ python3 examples/autonomous_eval.py</pre>
 </section>
 
 </main>
-<footer>EvalGrid · generated architecture overview · open this file in any browser</footer>
+<footer>EvalGrid , generated architecture overview , open this file in any browser</footer>
 </body>
 </html>

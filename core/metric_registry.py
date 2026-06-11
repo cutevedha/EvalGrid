@@ -1,7 +1,31 @@
-# Metric Registry - Central management system for all evaluation metrics
-# Provides registration, discovery, and execution of metrics throughout the framework
+"""
+core/metric_registry.py: The catalogue of all evaluation metrics in EvalGrid.
 
-from typing import Callable, Dict, List, Optional, Any, Type
+Think of this as the "plugin system" for metrics.  Any module can register a new
+evaluation metric by using the @register_metric decorator, and any other part of
+the framework can discover and run it by name: without either side needing to
+know about the other.
+
+Key concepts
+------------
+MetricMetadata
+    Descriptive information about a metric (name, tags, which AI capabilities it
+    applies to).  Used for documentation and filtering.
+
+BaseMetric
+    The class-based interface for writing a custom metric.  Subclass it, implement
+    compute(), and register an instance with MetricRegistry.register().
+
+MetricRegistry
+    A singleton (one global instance) that stores every metric and exposes helpers
+    to list, filter, and run them.  The Orchestrator and EvalAgent both use it.
+
+@register_metric
+    The easiest way to add a metric: decorate any function that takes
+    (test_case, actual_output) and returns a dict of scores.
+"""
+
+from typing import Callable, Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from core.schemas import TestCase, EvalResult
 
@@ -161,7 +185,7 @@ class MetricRegistry:
         """
         Return the underlying callable for a metric (class .compute or function).
 
-        Used by callers that need to introspect a metric's signature — e.g. to discover
+        Used by callers that need to introspect a metric's signature: e.g. to discover
         which extra data parameters it requires before deciding whether to run it.
         """
         registry = cls()

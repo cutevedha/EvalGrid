@@ -1,5 +1,31 @@
-# Toxicity Detection - Identifies harmful and inappropriate content
-# Detects hate speech, threats, sexual content, self-harm, and violence
+"""
+guards/toxicity.py: Detect harmful and inappropriate content in AI outputs.
+
+Toxicity detection ensures that AI responses do not contain content that is
+offensive, dangerous, or harmful to users.
+
+Categories detected
+-------------------
+- **hate**      : hate speech or expressions of extreme hatred towards groups.
+- **threat**    : language threatening harm, murder, or attack.
+- **sexual**    : explicit or inappropriate sexual content.
+- **self_harm** : references to suicide or self-harm.
+- **violence**  : descriptions of brutal or violent acts.
+
+How it works
+------------
+The detector maintains a keyword list per category (TOXICITY_KEYWORDS).
+A category is flagged if any of its keywords appear (case-insensitively) in the text.
+
+This is a lightweight, dependency-free baseline.  For production systems, consider
+replacing or supplementing it with a dedicated toxicity model (e.g. Perspective API,
+OpenAI Moderation API, or a fine-tuned classifier).
+
+Return values
+-------------
+All metric functions return 1.0 (clean) or 0.0 (toxic) for their category.
+overall_toxicity() returns 0.0 if ANY category is toxic.
+"""
 
 from core.metric_registry import register_metric
 from typing import Dict, List

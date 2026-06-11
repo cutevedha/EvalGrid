@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 @dataclass
 class MetricSpec:
     """
-    The documented contract for a metric — the antidote to "easy to compute but invalid".
+    The documented contract for a metric: the safeguard against "easy to compute but invalid".
 
     Fields force the author to state not just *what* the metric computes but *why* it is
     the right measure for the task and whether it is deterministic.
@@ -41,7 +41,7 @@ class MetricCatalog:
     """
     Holds MetricSpecs and checks them against the registered metrics.
 
-    ``coverage`` reports which live metrics still lack a written definition — directly
+    ``coverage`` reports which live metrics still lack a written definition: directly
     supporting the spec rule "every metric has a written definition and rationale".
     """
 
@@ -75,7 +75,7 @@ class MetricCatalog:
 def bootstrap_ci(scores: Sequence[float], confidence: float = 0.95,
                  iterations: int = 1000, seed: int = 0) -> Dict[str, float]:
     """
-    Bootstrap confidence interval for a mean score — the "error bar" the spec demands.
+    Bootstrap confidence interval for a mean score: the "error bar" the spec demands.
 
     Returns mean plus the lower/upper bounds of the central ``confidence`` interval.
     Deterministic given ``seed`` so the same scores always yield the same interval.

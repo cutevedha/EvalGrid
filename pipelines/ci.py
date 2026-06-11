@@ -49,7 +49,7 @@ def run_demo():
 
     Executes:
     1. Golden test cases (t1, t2) with known correct outputs
-    2. All generated red-team attack cases — the model's refusal is treated as the output
+    2. All generated red-team attack cases: the model's refusal is treated as the output
 
     Returns:
         List of EvalResult dicts (model_dump format) for all test cases

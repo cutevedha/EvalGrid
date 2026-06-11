@@ -1,5 +1,22 @@
-# Core data schemas for EvalGrid
-# Defines all data models used throughout the framework for test cases and evaluation results
+"""
+core/schemas.py: Data blueprints for the entire EvalGrid framework.
+
+Think of this file as the "vocabulary" of EvalGrid.  Every piece of data that flows
+through the system: a test question, an AI's answer, an evaluation result: is
+described by a model (class) defined here.
+
+For newcomers
+-------------
+- A TestCase is one question/task you want the AI to answer.
+- An EvalResult is what EvalGrid produces after judging that answer.
+- **AgentTrace / AgentStep / ToolCall** record exactly what an autonomous AI agent
+  did, step by step, so you can replay and audit it later.
+- RAGTestCase / RAGEvalResult are specialised variants for systems that
+  retrieve documents before answering (Retrieval-Augmented Generation).
+
+All models use Pydantic so they are automatically validated and can be serialised
+to/from JSON with zero boilerplate.
+"""
 
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal, Dict, Any

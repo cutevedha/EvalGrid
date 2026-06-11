@@ -1,3 +1,16 @@
+Metadata-Version: 2.4
+Name: eval-grid
+Version: 0.1.0
+Summary: Comprehensive evaluation framework for LLM and AI projects
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pydantic>=2.0
+Requires-Dist: pandas>=2.0
+Requires-Dist: numpy>=1.20
+Requires-Dist: PyYAML>=6.0
+Dynamic: license-file
+
 # EvalGrid
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
@@ -63,17 +76,17 @@ eval-grid list-metrics --capability agent
 
 ## Autonomous Evaluation (Eval Agent)
 
-Instead of hand-writing test cases, point the EvalAgent at any AI system and give
+Instead of hand-writing test cases, point the **EvalAgent** at any AI system and give
 it a plain-English goal. The agent autonomously:
 
-1. Plans: turns your goal + the target's capabilities into a set of probes
+1. **Plans** — turns your goal + the target's capabilities into a set of probes
    (functional checks + red-team attacks implied by the goal).
-2. Generates test cases for each probe.
-3. Drives the target to produce outputs (LLM, callable, or offline output map).
-4. Evaluates every output with the existing Orchestrator + metrics.
-5. Reflects: finds the weakest probes and **mutates the failing inputs into
+2. **Generates** test cases for each probe.
+3. **Drives** the target to produce outputs (LLM, callable, or offline output map).
+4. **Evaluates** every output with the existing Orchestrator + metrics.
+5. **Reflects** — finds the weakest probes and **mutates the failing inputs into
    harder adversarial variants** for the next round (adaptive red-teaming).
-6. Reports: emits a verdict, per-probe findings, and standard HTML/JSON/MD reports.
+6. **Reports** — emits a verdict, per-probe findings, and standard HTML/JSON/MD reports.
 
 ### CLI
 
@@ -94,7 +107,7 @@ plus the usual `report.html`, `scorecard.csv`, `run_results.json`, and `report.m
 
 ### Governed evaluation (integrity gates)
 
-Run an evaluation through the governance pipeline: it drives the target **unchanged**,
+Run an evaluation through the governance pipeline — it drives the target **unchanged**,
 applies pre-set acceptance gates + integrity/red-flag checks, and **exits non-zero when a
 release should be blocked**:
 
@@ -143,10 +156,10 @@ A runnable, multi-target demo lives in [`examples/autonomous_eval.py`](examples/
 For red-team probes the correct target behaviour is to **refuse**. The agent scores
 refusal with a tiered detector, using the most robust signal available:
 
-1. **Dedicated classifier**: pass `refusal_detector=fn(output) -> score` (e.g. a
+1. **Dedicated classifier** — pass `refusal_detector=fn(output) -> score` (e.g. a
    fine-tuned model) for the strongest verdicts.
-2. **LLM judge**: pass `reasoner=<LLMClient>` and the agent asks it YES/NO per output.
-3. **Keyword heuristic**: the zero-dependency fallback when neither is configured.
+2. **LLM judge** — pass `reasoner=<LLMClient>` and the agent asks it YES/NO per output.
+3. **Keyword heuristic** — the zero-dependency fallback when neither is configured.
 
 ```python
 from agent import EvalAgent, EvalTarget
@@ -526,8 +539,8 @@ score = orchestrator.compute_metric("embedding_similarity", test_case, output)
 
 - **Async-first** - Batch evaluation with configurable concurrency
 - **Lazy loading** - Optional dependencies loaded only when needed
-- Caching - Results cached to avoid redundant computations
-- Streaming - Real-time evaluation with callbacks
+- **Caching** - Results cached to avoid redundant computations
+- **Streaming** - Real-time evaluation with callbacks
 
 ## Best Practices
 
@@ -538,7 +551,7 @@ score = orchestrator.compute_metric("embedding_similarity", test_case, output)
 5. **Test robustness** - Evaluate against adversarial inputs
 6. **Monitor fairness** - Check for bias across demographic groups
 7. **Set thresholds** - Define pass/fail criteria per severity level
-8. Iterate - Use results to improve your AI system
+8. **Iterate** - Use results to improve your AI system
 
 ## Contributing
 

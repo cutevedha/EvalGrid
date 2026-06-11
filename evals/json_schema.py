@@ -24,7 +24,7 @@ def validate_json_output(text: str, required_keys=None):
     try:
         obj = loads(text)  # Attempt to parse as JSON
     except Exception:
-        # Output is not valid JSON — return worst-case scores
+        # Output is not valid JSON: return worst-case scores
         return {"valid_json": 0.0, "missing_keys": len(required_keys)}
 
     # JSON parsed successfully; now check which required keys are absent

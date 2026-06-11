@@ -1,7 +1,30 @@
-# Scoring utilities for EvalGrid
-# Implements various text similarity and matching algorithms for evaluation
+"""
+core/scoring.py: Text-similarity and matching algorithms used by the evaluators.
 
-from typing import List, Set
+This file is the maths engine of EvalGrid.  When EvalGrid needs to decide "how
+close is the AI's answer to the correct answer?", it calls one of the functions
+here.
+
+Algorithms available (from cheapest to most complex)
+-----------------------------------------------------
+1. **Exact / substring / case-insensitive match**: simple string comparisons.
+2. **Jaccard similarity**: compares the *set* of words: how many words do both
+   texts share?
+3. BLEU: counts how many short phrases (n-grams) appear in both texts.
+   Widely used to evaluate machine translation.
+4. **ROUGE-L**: finds the longest sequence of words that appear in the same
+   order in both texts.  Good for summaries.
+5. **F1 token overlap**: the harmonic mean of precision and recall at word level.
+6. **Edit distance (Levenshtein)**: counts the minimum number of character
+   insertions/deletions/replacements needed to turn one text into the other.
+7. **Numeric tolerance**: checks whether a numeric answer is within an
+   acceptable percentage of the expected value.
+
+All functions return a **float in the range 0.0 - 1.0** where 1.0 means "perfect
+match" and 0.0 means "no match at all".
+"""
+
+from typing import List
 import math
 
 
@@ -57,26 +80,27 @@ def substring_match(actual: str, expected: str) -> float:
 # JACCARD SIMILARITY (SET-BASED)
 # ============================================================================
 
-def simple_similarity(a: str, b: str) -> float:
+def simple_similarity(actual: str, reference: str) -> float:
     """
-    Calculate Jaccard similarity between two texts (word-level overlap)
+    Calculate Jaccard similarity between two texts (word-level overlap).
 
     Jaccard = |intersection| / |union|
-    Treats each word as a set element
+    Treats each unique word as a set element, so word order is ignored.
 
     Args:
-        a: First text
-        b: Second text
+        actual: The AI's output text.
+        reference: The expected/reference text.
 
     Returns:
-        Similarity score between 0.0 and 1.0
+        Similarity score between 0.0 (no shared words) and 1.0 (identical word sets).
     """
-    if not a or not b:
+    if not actual or not reference:
         return 0.0
-    sa = set(a.lower().split())  # Words in first text
-    sb = set(b.lower().split())  # Words in second text
-    # Calculate intersection and union
-    return len(sa & sb) / max(len(sa | sb), 1)
+    actual_words = set(actual.lower().split())
+    reference_words = set(reference.lower().split())
+    shared_words = actual_words & reference_words
+    all_words = actual_words | reference_words
+    return len(shared_words) / max(len(all_words), 1)
 
 
 # ============================================================================
@@ -172,31 +196,33 @@ def rouge_l(actual: str, reference: str) -> float:
     return f1
 
 
-def _lcs_length(a: List[str], b: List[str]) -> int:
+def _lcs_length(seq_a: List[str], seq_b: List[str]) -> int:
     """
-    Calculate length of longest common subsequence using dynamic programming
+    Calculate the length of the longest common subsequence (LCS) using dynamic programming.
+
+    LCS finds the longest sequence of tokens that appears in both inputs in the same
+    relative order (but not necessarily contiguous).  Used internally by rouge_l().
 
     Args:
-        a: First sequence
-        b: Second sequence
+        seq_a: First token sequence.
+        seq_b: Second token sequence.
 
     Returns:
-        Length of longest common subsequence
+        Number of tokens in the longest common subsequence.
     """
-    m, n = len(a), len(b)
-    # DP table: dp[i][j] = LCS length for a[0:i] and b[0:j]
-    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    rows = len(seq_a)
+    cols = len(seq_b)
+    # dp[i][j] = LCS length when considering seq_a[0:i] and seq_b[0:j]
+    dp = [[0] * (cols + 1) for _ in range(rows + 1)]
 
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if a[i-1] == b[j-1]:
-                # Characters match: extend previous LCS
-                dp[i][j] = dp[i-1][j-1] + 1
+    for i in range(1, rows + 1):
+        for j in range(1, cols + 1):
+            if seq_a[i - 1] == seq_b[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1] + 1   # tokens match: extend the LCS
             else:
-                # Characters don't match: take max of two options
-                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])  # take the longer partial LCS
 
-    return dp[m][n]
+    return dp[rows][cols]
 
 
 # ============================================================================
@@ -258,31 +284,31 @@ def edit_distance(actual: str, expected: str) -> float:
     actual_lower = actual.lower()
     expected_lower = expected.lower()
 
-    m, n = len(actual_lower), len(expected_lower)
-    # DP table: dp[i][j] = edit distance for actual[0:i] and expected[0:j]
-    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    actual_len = len(actual_lower)
+    expected_len = len(expected_lower)
+    # dp[i][j] = edit distance for actual_lower[0:i] and expected_lower[0:j]
+    dp = [[0] * (expected_len + 1) for _ in range(actual_len + 1)]
 
-    # Initialize first row and column
-    for i in range(m + 1):
-        dp[i][0] = i  # Delete all characters from actual
-    for j in range(n + 1):
-        dp[0][j] = j  # Insert all characters from expected
+    # Base cases: converting an empty string requires inserting/deleting every character.
+    for i in range(actual_len + 1):
+        dp[i][0] = i
+    for j in range(expected_len + 1):
+        dp[0][j] = j
 
-    # Fill DP table
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if actual_lower[i-1] == expected_lower[j-1]:
-                # Characters match: no edit needed
-                dp[i][j] = dp[i-1][j-1]
+    for i in range(1, actual_len + 1):
+        for j in range(1, expected_len + 1):
+            if actual_lower[i - 1] == expected_lower[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1]                           # characters match: free
             else:
-                # Take minimum of: delete, insert, or replace
-                dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])
+                dp[i][j] = 1 + min(dp[i - 1][j],                      # delete from actual
+                                   dp[i][j - 1],                       # insert from expected
+                                   dp[i - 1][j - 1])                   # substitute
 
-    # Normalize to 0-1 range
-    max_len = max(m, n)
+    max_len = max(actual_len, expected_len)
     if max_len == 0:
         return 1.0
-    return 1.0 - (dp[m][n] / max_len)
+    # Convert raw distance to a 0-1 similarity: 1.0 = identical, 0.0 = completely different.
+    return 1.0 - (dp[actual_len][expected_len] / max_len)
 
 
 # ============================================================================

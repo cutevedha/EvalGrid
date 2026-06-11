@@ -1,26 +1,26 @@
-# EvalGrid — Visual Architecture & Flow Guide
+# EvalGrid: Visual Architecture & Flow Guide
 
 A complete map of how EvalGrid is put together: the layers, the two execution flows
 (classic and autonomous), a flowchart of the agent loop, and a file-by-file reference
 showing exactly what connects to what.
 
-> The diagrams below use **Mermaid**. They render automatically on GitHub and in most
+> The diagrams below use Mermaid. They render automatically on GitHub and in most
 > Markdown viewers (VS Code with a Mermaid extension, Obsidian, etc.).
 
 ---
 
 ## 1. The 10-second mental model
 
-EvalGrid answers one question — **"is this AI output good?"** — in two modes:
+EvalGrid answers one question: **"is this AI output good?"**: in two modes:
 
-1. **Classic mode**: *you* supply a `TestCase` + the AI's output → the **Orchestrator**
-   scores it → **Reports**.
-2. **Autonomous mode** (the Eval Agent): *you* supply a **goal** + a **target system** →
-   the **EvalAgent** generates its own test cases, drives the target, scores the outputs,
-   adaptively red-teams the weak spots, and writes a verdict → **Reports**.
+1. **Classic mode**: *you* supply a `TestCase` + the AI's output -> the Orchestrator
+   scores it -> Reports.
+2. **Autonomous mode** (the Eval Agent): *you* supply a **goal** + a **target system** ->
+   the EvalAgent generates its own test cases, drives the target, scores the outputs,
+   adaptively red-teams the weak spots, and writes a verdict -> Reports.
 
-Both modes share the same engine underneath: **Orchestrator → Metric Registry →
-Evaluators → Guards → Scoring primitives**.
+Both modes share the same engine underneath: **Orchestrator -> Metric Registry ->
+Evaluators -> Guards -> Scoring primitives**.
 
 ---
 
@@ -44,21 +44,21 @@ graph TD
 
     subgraph L3["③ Orchestration Layer"]
         ORCH["core/orchestrator.py<br/>Orchestrator"]
-        BATCH["pipelines/batch_runner.py<br/>Batch · Streaming · Gating"]
+        BATCH["pipelines/batch_runner.py<br/>Batch , Streaming , Gating"]
         STREAM["pipelines/streaming_runner.py"]
     end
 
     subgraph L4["④ Metric Registry"]
-        REG["core/metric_registry.py<br/>register · discover · compute"]
+        REG["core/metric_registry.py<br/>register , discover , compute"]
     end
 
     subgraph L5["⑤ Evaluators  (evals/)"]
-        EVDET["deterministic · semantic<br/>json_schema · safety · llm_judge"]
-        EVADV["agent · rag · multiagent<br/>performance · robustness · bias_fairness<br/>embedded_ai · custom_metrics"]
+        EVDET["deterministic , semantic<br/>json_schema , safety , llm_judge"]
+        EVADV["agent , rag , multiagent<br/>performance , robustness , bias_fairness<br/>embedded_ai , custom_metrics"]
     end
 
     subgraph L6["⑥ Guards  (guards/)"]
-        GUARD["pii · prompt_injection · policy<br/>toxicity · hallucination"]
+        GUARD["pii , prompt_injection , policy<br/>toxicity , hallucination"]
     end
 
     subgraph L7["⑦ Primitives  (core/)"]
@@ -67,9 +67,9 @@ graph TD
     end
 
     subgraph L8["⑧ Side Services"]
-        ADAPT["adapters/llm<br/>OpenAI · Anthropic · Ollama · Mock"]
-        SYNTH["synthetic/<br/>redteam · augmentation · dataset_builder"]
-        REPORTS["reports/<br/>html · json · markdown · scorecard"]
+        ADAPT["adapters/llm<br/>OpenAI , Anthropic , Ollama , Mock"]
+        SYNTH["synthetic/<br/>redteam , augmentation , dataset_builder"]
+        REPORTS["reports/<br/>html , json , markdown , scorecard"]
     end
 
     CLI --> AG & ORCH & BATCH & REPORTS
@@ -100,7 +100,7 @@ the framework testable.
 
 ---
 
-## 3. Flow A — Classic evaluation (single test case)
+## 3. Flow A: Classic evaluation (single test case)
 
 This is the path `Orchestrator.run()` takes.
 
@@ -110,7 +110,7 @@ sequenceDiagram
     participant O as Orchestrator
     participant D as evals/deterministic
     participant S as evals/semantic
-    participant SF as evals/safety → guards/policy
+    participant SF as evals/safety -> guards/policy
     participant J as evals/llm_judge
     participant G as guards/pii + prompt_injection
     participant R as EvalResult
@@ -133,29 +133,29 @@ sequenceDiagram
 
 **Step by step:**
 
-1. **Input** — caller passes a `TestCase` (from `core/schemas.py`) and the AI's
+1. Input: caller passes a `TestCase` (from `core/schemas.py`) and the AI's
    `actual_output` string.
-2. **Deterministic** — fast, dependency-free string/regex checks (`evals/deterministic.py`
-   → `core/scoring.py`).
-3. **Semantic** — meaning-based similarity (`evals/semantic.py`; pluggable embedder).
-4. **Safety** — `evals/safety.py` delegates to `guards/policy.py` (blocked-phrase check).
-5. **LLM judge** — `evals/llm_judge.py` scores correctness/groundedness, using a real LLM
+2. Deterministic: fast, dependency-free string/regex checks (`evals/deterministic.py`
+   -> `core/scoring.py`).
+3. Semantic: meaning-based similarity (`evals/semantic.py`; pluggable embedder).
+4. Safety: `evals/safety.py` delegates to `guards/policy.py` (blocked-phrase check).
+5. **LLM judge**: `evals/llm_judge.py` scores correctness/groundedness, using a real LLM
    if one was set via `set_llm_client()`, otherwise a heuristic fallback.
-6. **Guards** — `guards/pii.py` and `guards/prompt_injection.py` flag sensitive data and
+6. Guards: `guards/pii.py` and `guards/prompt_injection.py` flag sensitive data and
    attack patterns.
-7. **Gate** — scores are compared against `test_case.thresholds`; PII is a hard fail.
-8. **Output** — an `EvalResult(passed, scores, notes)`.
+7. Gate: scores are compared against `test_case.thresholds`; PII is a hard fail.
+8. Output: an `EvalResult(passed, scores, notes)`.
 
 > **Note on the other evaluators.** `Orchestrator.run()` wires the common set above.
-> The richer evaluators — `agent_evals`, `rag_evals`, `multiagent_evals`,
+> The richer evaluators: `agent_evals`, `rag_evals`, `multiagent_evals`,
 > `performance_evals`, `robustness_evals`, `bias_fairness_evals`, `embedded_ai_evals`,
-> `custom_metrics`, plus the `toxicity`/`hallucination` guards — **register themselves into
+> `custom_metrics`, plus the `toxicity`/`hallucination` guards: **register themselves into
 > the Metric Registry** on import and are invoked on demand via
 > `orchestrator.compute_metric("name", …)` or `run_with_custom_metrics([...])`.
 
 ---
 
-## 4. Flow B — Autonomous Eval Agent
+## 4. Flow B: Autonomous Eval Agent
 
 The headline feature. `EvalAgent.run(goal, capabilities)` performs this loop.
 
@@ -182,7 +182,7 @@ flowchart TD
     ROUNDLOOP -->|no weak probes<br/>or budget spent| BUILD
 
     BUILD["Build EvalReport<br/>(report.py)"] --> SUMM["Summarise verdict<br/>(LLM polish optional)"]
-    SUMM --> OUT([EvalReport:<br/>verdict · findings · results])
+    SUMM --> OUT([EvalReport:<br/>verdict , findings , results])
 
     style PLANNING fill:#e8f0fe
     style ROUND fill:#fef7e8
@@ -193,13 +193,13 @@ flowchart TD
 
 | # | Phase | File | What happens |
 |---|-------|------|--------------|
-| 1 | **Plan** | `agent/planner.py` | Goal text + capabilities → list of `ProbeSpec`s. Capability words add *functional* probes; risk words ("safe", "jailbreak", "pii"…) add *red-team* probes pulled from `synthetic/redteam.py`. |
-| 2 | **Generate** | `agent/agent.py` | Round 1 uses base inputs (attack strings or functional seeds). Later rounds **mutate the inputs that failed** into harder variants via `synthetic/redteam.py` + `synthetic/augmentation.py`. |
-| 3 | **Execute** | `agent/target.py` | `EvalTarget` calls the system-under-test (LLM client / callable / offline map) and returns its output. Errors become `"Error: …"` strings. |
-| 4 | **Evaluate** | `core/orchestrator.py` | Each output is scored by the Orchestrator. For adversarial probes the agent adds a **refusal score** (classifier → LLM judge → keyword heuristic). |
-| 5 | **Record** | `agent/memory.py` | Stores `(TestCase, EvalResult)` per probe; computes per-probe pass rates and weakest metric. |
-| 6 | **Reflect** | `agent/agent.py` | Probes with pass rate ≥ 0.8 are **dropped** (settled); weak ones survive to the next round. Loop ends when none remain or rounds run out. |
-| 7 | **Report** | `agent/report.py` | Rolls memory into `ProbeFinding`s + an `EvalReport` with a PASS/FAIL verdict and a natural-language summary. |
+| 1 | Plan | `agent/planner.py` | Goal text + capabilities -> list of `ProbeSpec`s. Capability words add *functional* probes; risk words ("safe", "jailbreak", "pii"…) add *red-team* probes pulled from `synthetic/redteam.py`. |
+| 2 | Generate | `agent/agent.py` | Round 1 uses base inputs (attack strings or functional seeds). Later rounds **mutate the inputs that failed** into harder variants via `synthetic/redteam.py` + `synthetic/augmentation.py`. |
+| 3 | Execute | `agent/target.py` | `EvalTarget` calls the system-under-test (LLM client / callable / offline map) and returns its output. Errors become `"Error: …"` strings. |
+| 4 | Evaluate | `core/orchestrator.py` | Each output is scored by the Orchestrator. For adversarial probes the agent adds a **refusal score** (classifier -> LLM judge -> keyword heuristic). |
+| 5 | Record | `agent/memory.py` | Stores `(TestCase, EvalResult)` per probe; computes per-probe pass rates and weakest metric. |
+| 6 | Reflect | `agent/agent.py` | Probes with pass rate ≥ 0.8 are **dropped** (settled); weak ones survive to the next round. Loop ends when none remain or rounds run out. |
+| 7 | Report | `agent/report.py` | Rolls memory into `ProbeFinding`s + an `EvalReport` with a PASS/FAIL verdict and a natural-language summary. |
 
 The **adaptive narrowing** in steps 2 & 6 is what makes it autonomous: budget concentrates
 on real weaknesses instead of re-testing things that already pass.
@@ -260,24 +260,24 @@ These Pydantic models are the **shared currency** every layer speaks.
 
 ## 6. File-by-file reference
 
-### `core/` — the foundation
+### `core/`: the foundation
 | File | Role | Imports | Used by |
 |------|------|---------|---------|
-| `schemas.py` | All data models (TestCase, EvalResult, AgentTrace…) | — | nearly everything |
-| `scoring.py` | Pure similarity math (exact, BLEU, ROUGE, F1, Jaccard) | — | evals (deterministic, semantic, rag, robustness) |
+| `schemas.py` | All data models (TestCase, EvalResult, AgentTrace…) |: | nearly everything |
+| `scoring.py` | Pure similarity math (exact, BLEU, ROUGE, F1, Jaccard) |: | evals (deterministic, semantic, rag, robustness) |
 | `metric_registry.py` | Register / discover / compute metrics; `@register_metric` decorator | schemas | orchestrator, every eval & guard |
 | `orchestrator.py` | Runs the common metric set; sync + async + batch | metric_registry, schemas, evals×5, guards×2 | agent, pipelines, cli |
 
-### `agent/` — the autonomous evaluator
+### `agent/`: the autonomous evaluator
 | File | Role | Imports | Used by |
 |------|------|---------|---------|
-| `target.py` | `EvalTarget` — wrap any SUT as `run(case)->str` | schemas | agent, cli |
-| `planner.py` | `EvalPlanner` — goal → probes | synthetic.redteam | agent |
-| `memory.py` | `AgentMemory` — per-probe results & findings | planner, report, schemas | agent |
+| `target.py` | `EvalTarget`: wrap any SUT as `run(case)->str` | schemas | agent, cli |
+| `planner.py` | `EvalPlanner`: goal -> probes | synthetic.redteam | agent |
+| `memory.py` | `AgentMemory`: per-probe results & findings | planner, report, schemas | agent |
 | `report.py` | `EvalReport`, `ProbeFinding`, `RoundRecord` | schemas | agent, memory |
-| `agent.py` | `EvalAgent` — the plan→generate→execute→evaluate→reflect loop | orchestrator, schemas, synthetic×2, agent.* | cli, examples |
+| `agent.py` | `EvalAgent`: the plan->generate->execute->evaluate->reflect loop | orchestrator, schemas, synthetic×2, agent.* | cli, examples |
 
-### `evals/` — the metrics (register into the registry on import)
+### `evals/`: the metrics (register into the registry on import)
 | File | Provides | Notes |
 |------|----------|-------|
 | `deterministic.py` | exact/substring/regex/keyword/length matches | wired into Orchestrator.run |
@@ -294,7 +294,7 @@ These Pydantic models are the **shared currency** every layer speaks.
 | `embedded_ai_evals.py` | latency budget, fallback, graceful degradation | via registry |
 | `custom_metrics.py` | examples of user-defined metrics | via registry |
 
-### `guards/` — safety primitives
+### `guards/`: safety primitives
 | File | Role | Exposes to |
 |------|------|-----------|
 | `policy.py` | blocked-phrase check | evals/safety |
@@ -332,7 +332,7 @@ graph LR
     AGENT --> EREPORT["EvalReport<br/>(verdict + findings)"]
     RESULTS --> RENDER["reports/*"]
     EREPORT --> RENDER
-    RENDER --> FILES["report.html · scorecard.csv<br/>run_results.json · report.md<br/>agent_report.json"]
+    RENDER --> FILES["report.html , scorecard.csv<br/>run_results.json , report.md<br/>agent_report.json"]
 ```
 
 The **Orchestrator is the single chokepoint**: whether a human wrote one test case or the
@@ -344,7 +344,7 @@ same reporters. That is the core design invariant of EvalGrid.
 ## 8. Quick command reference
 
 ```bash
-# Autonomous agent (no API key needed — uses the mock target)
+# Autonomous agent (no API key needed: uses the mock target)
 python3 -m scripts.cli auto --goal "make sure the bot is safe against jailbreaks"
 
 # Classic demo suite

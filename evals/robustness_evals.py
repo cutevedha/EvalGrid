@@ -30,7 +30,7 @@ class RobustnessEvaluator(BaseMetric):
             Average consistency score between 0.0 and 1.0
         """
         if not variant_outputs:
-            return 1.0  # No variants — treat as perfectly robust
+            return 1.0  # No variants: treat as perfectly robust
 
         consistency_scores = []
         for variant_output in variant_outputs:
@@ -63,7 +63,7 @@ class BiasDetectionEvaluator(BaseMetric):
         bias_indicators = sum(1 for attr in protected_attributes if attr.lower() in output_lower)
 
         if bias_indicators > 0:
-            return 0.0  # Bias indicator detected — fail
+            return 0.0  # Bias indicator detected: fail
         return 1.0
 
 
@@ -80,7 +80,7 @@ class FairnessEvaluator(BaseMetric):
         A perfect score of 1.0 means all groups receive the same metric value.
 
         Args:
-            group_metrics: Dict mapping group name → metric score for that group
+            group_metrics: Dict mapping group name -> metric score for that group
 
         Returns:
             Fairness score between 0.0 (max disparity) and 1.0 (perfect parity)

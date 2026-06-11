@@ -3,11 +3,11 @@
 A non-blocking guardrail layer that wraps the evaluation engine with integrity,
 traceability, and acceptance controls.
 
-**Design invariant:** governance **measures and records** — it never modifies the target
+**Design invariant:** governance **measures and records**: it never modifies the target
 model and never throttles the core eval. Every operational control (timeouts, cost
 ceilings, rate limits) is opt-in and a no-op unless explicitly configured.
 
-## Category → module map
+## Category -> module map
 
 | # | Governance category | Module | Key pieces |
 |---|---------------------|--------|-----------|
@@ -22,16 +22,16 @@ ceilings, rate limits) is opt-in and a no-op unless explicitly configured.
 | 9 | Change management | [`change_management.py`](change_management.py) | `ComponentVersions`, `requires_revalidation`, `BaselineStore` (+ rollback), `mark_breaking_changes` |
 | 10 | Acceptance criteria | [`acceptance.py`](acceptance.py) | `AcceptancePolicy` (min sample size, critical vs exploratory gates, no single-metric release, measurement-confidence vs model-quality) |
 | 11 | Red flags | [`red_flags.py`](red_flags.py) | `scan_red_flags`, `is_clean` |
-| — | Suggested 6-step structure | [`pipeline.py`](pipeline.py) | `GovernancePipeline`: validate → run-unchanged → score → log → compare → gate |
+|: | Suggested 6-step structure | [`pipeline.py`](pipeline.py) | `GovernancePipeline`: validate -> run-unchanged -> score -> log -> compare -> gate |
 
 ## Reuse, not duplication
 
 The layer builds on existing framework parts instead of re-implementing them:
-- **Adversarial generation** → reuses `synthetic/redteam.py` + the autonomous agent.
-- **Injection detection** → reuses `guards/prompt_injection.py`.
-- **Edge cases** → reuses `synthetic/augmentation.py`.
-- **Judge rubrics** → versions the existing `evals/llm_judge.py` templates.
-- **Per-metric averaging gates** → complements `pipelines/GatingRunner` with a policy layer.
+- **Adversarial generation** -> reuses `synthetic/redteam.py` + the autonomous agent.
+- **Injection detection** -> reuses `guards/prompt_injection.py`.
+- **Edge cases** -> reuses `synthetic/augmentation.py`.
+- **Judge rubrics** -> versions the existing `evals/llm_judge.py` templates.
+- **Per-metric averaging gates** -> complements `pipelines/GatingRunner` with a policy layer.
 
 ## Quick start
 
@@ -64,7 +64,7 @@ print(outcome.audit)                    # full traceable event log
 
 A few spec items require humans or external systems and are provided as **hooks**, not
 fake automation:
-- **Inter-rater agreement / judge calibration** — `cohen_kappa`, `agreement_rate`, and the
+- **Inter-rater agreement / judge calibration**: `cohen_kappa`, `agreement_rate`, and the
   judge-bias probes are provided, but you supply the human labels.
-- **Human override path** — `HumanOverride` records a person's decision; it does not invent one.
-- **Access control** — `AccessControl` enforces roles you define; wire it to your real auth.
+- **Human override path**: `HumanOverride` records a person's decision; it does not invent one.
+- **Access control**: `AccessControl` enforces roles you define; wire it to your real auth.

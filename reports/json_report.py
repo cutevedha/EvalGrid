@@ -1,5 +1,16 @@
-# JSON Report - Exports evaluation results to structured JSON format
-# Produces machine-readable output with metadata, per-metric summaries, and full results
+"""
+reports/json_report.py: Export evaluation results to structured JSON.
+
+The JSON report is the most machine-readable output format.  It includes:
+  - Metadata: timestamp, total cases, overall pass rate.
+  - Per-metric summary: min, max, mean, and count across all results.
+  - Full per-case results: scores, pass/fail status, and evaluator notes.
+
+Use this format when you want to:
+  - Feed results into a data pipeline or database.
+  - Compare two runs programmatically with `eval-grid compare`.
+  - Archive a full audit trail of an evaluation run.
+"""
 
 from pathlib import Path
 from typing import List, Dict, Any

@@ -70,7 +70,7 @@ class EvalTarget:
         """
         Wrap an arbitrary sync or async callable ``fn(input, context) -> str``.
 
-        Callables that only accept a single positional argument are also supported —
+        Callables that only accept a single positional argument are also supported  - 
         the context is dropped automatically.
         """
         sig_params = _count_positional_params(fn)

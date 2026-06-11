@@ -1,7 +1,7 @@
 # Scoring Guardrails - Category 4
 # Deterministic scoring, defined behaviour for missing/malformed/truncated outputs,
 # documented aggregation (weights + exclusions), tie-breaking, and outlier handling that
-# is fixed *before* results are reviewed. None of this changes the target's output — it
+# is fixed *before* results are reviewed. None of this changes the target's output: it
 # only governs how an already-produced output is turned into a number.
 
 from __future__ import annotations
@@ -57,7 +57,7 @@ class ScoringPolicy:
     tie_breaker: str = "lower"           # On ties prefer "lower" (conservative) or "higher"
     weights: Dict[str, float] = field(default_factory=dict)   # Per-metric aggregation weights
     exclusions: List[str] = field(default_factory=list)       # Metrics excluded from aggregation
-    outlier_method: str = "none"         # "none" | "iqr" — fixed before review
+    outlier_method: str = "none"         # "none" | "iqr": fixed before review
 
     def score_for_condition(self, condition: str, raw_score: float) -> float:
         """Map a raw score through the policy given the output condition."""
@@ -78,7 +78,7 @@ def assert_deterministic(scorer: Callable[[], float], runs: int = 3) -> bool:
     """
     Verify a scorer returns identical results for identical inputs across repeated calls.
 
-    Returns True if every run agrees — the spec's "scoring rules are deterministic for
+    Returns True if every run agrees: the spec's "scoring rules are deterministic for
     identical inputs". Used in regression tests and CI.
     """
     first = scorer()

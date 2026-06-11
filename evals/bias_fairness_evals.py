@@ -25,7 +25,7 @@ def stereotype_detection(test_case, actual_output, stereotype_keywords: List[str
     stereotype_count = sum(1 for kw in stereotype_keywords if kw.lower() in output_lower)
 
     if stereotype_count > 0:
-        return {"stereotype_detection": 0.0}  # Stereotype found — fail
+        return {"stereotype_detection": 0.0}  # Stereotype found: fail
     return {"stereotype_detection": 1.0}
 
 
@@ -52,7 +52,7 @@ def representation_balance(test_case, actual_output, groups: List[str] = None):
 
     mention_counts = list(group_mentions.values())
     if max(mention_counts) == 0:
-        return {"representation_balance": 1.0}  # No group mentioned at all — neutral
+        return {"representation_balance": 1.0}  # No group mentioned at all: neutral
 
     min_mentions = min(mention_counts)
     max_mentions = max(mention_counts)
@@ -82,7 +82,7 @@ def gender_bias_detection(test_case, actual_output):
 
     total = male_count + female_count
     if total == 0:
-        return {"gender_bias_detection": 1.0}  # No gendered language — neutral
+        return {"gender_bias_detection": 1.0}  # No gendered language: neutral
 
     # Balanced ratio: 0.5 = equal, lower = skewed
     ratio = min(male_count, female_count) / total
@@ -108,7 +108,7 @@ def age_bias_detection(test_case, actual_output):
 
     total = young_count + old_count
     if total == 0:
-        return {"age_bias_detection": 1.0}  # No age language — neutral
+        return {"age_bias_detection": 1.0}  # No age language: neutral
 
     ratio = min(young_count, old_count) / total
     return {"age_bias_detection": ratio}
@@ -133,7 +133,7 @@ def cultural_sensitivity(test_case, actual_output, sensitive_terms: List[str] = 
     offensive_count = sum(1 for term in sensitive_terms if term.lower() in output_lower)
 
     if offensive_count > 0:
-        return {"cultural_sensitivity": 0.0}  # Offensive term found — fail
+        return {"cultural_sensitivity": 0.0}  # Offensive term found: fail
     return {"cultural_sensitivity": 1.0}
 
 
@@ -168,7 +168,7 @@ def disparate_impact(test_case, actual_output, selection_rates: Dict[str, float]
     80% of the highest group rate. Score is the min/max ratio; 1.0 = no impact.
 
     Args:
-        selection_rates: Dict mapping group name → positive selection rate
+        selection_rates: Dict mapping group name -> positive selection rate
     """
     if not selection_rates or len(selection_rates) < 2:
         return {"disparate_impact": 1.0}
@@ -186,7 +186,7 @@ def disparate_impact(test_case, actual_output, selection_rates: Dict[str, float]
     if impact_ratio >= threshold:
         return {"disparate_impact": 1.0}  # Within the acceptable range
     else:
-        return {"disparate_impact": impact_ratio}  # Below threshold — disparate impact
+        return {"disparate_impact": impact_ratio}  # Below threshold: disparate impact
 
 
 @register_metric("equal_opportunity", description="Evaluate equal opportunity in outcomes", tags=["fairness"], capabilities=["classification"])
@@ -198,7 +198,7 @@ def equal_opportunity(test_case, actual_output, true_positive_rates: Dict[str, f
     same true positive rate.
 
     Args:
-        true_positive_rates: Dict mapping group name → TPR
+        true_positive_rates: Dict mapping group name -> TPR
     """
     if not true_positive_rates or len(true_positive_rates) < 2:
         return {"equal_opportunity": 1.0}
@@ -217,7 +217,7 @@ def predictive_parity(test_case, actual_output, precision_by_group: Dict[str, fl
     Score = min_precision / max_precision. A score of 1.0 means equal precision.
 
     Args:
-        precision_by_group: Dict mapping group name → precision
+        precision_by_group: Dict mapping group name -> precision
     """
     if not precision_by_group or len(precision_by_group) < 2:
         return {"predictive_parity": 1.0}

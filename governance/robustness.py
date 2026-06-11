@@ -44,7 +44,7 @@ _ADVERSARIAL_TAGS = set(ATTACK_CATEGORIES) | {"adversarial"}
 
 def adversarial_coverage(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Report how much of a suite is adversarial — the spec wants adversarial samples present.
+    Report how much of a suite is adversarial: the spec wants adversarial samples present.
 
     Looks at each sample's risk_tags against the known red-team categories. Does not
     generate anything (synthetic/redteam owns generation); it only audits coverage.

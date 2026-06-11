@@ -1,5 +1,33 @@
-# LLM Judge - AI-powered evaluation using language models
-# Uses prompts to have an LLM evaluate AI outputs on various criteria
+"""
+evals/llm_judge.py: AI-powered quality evaluation using a language model as a judge.
+
+The idea: instead of writing hand-crafted rules to judge quality, we ask a
+second AI (the "judge") to read the response and rate it on a rubric.
+
+How it works
+------------
+1. A prompt template (JUDGE_TEMPLATES) is selected based on the desired rubric
+   (correctness, fluency, relevance, etc.).
+2. The question, AI response, and optional context are inserted into the template.
+3. The judge LLM is called and asked to give a score from 1 to 5.
+4. The score is extracted from the response and normalised to 0.0 - 1.0.
+
+Rubrics available
+-----------------
+- **correctness** : does the response accurately answer the question?
+- **groundedness**: is the response supported by the provided context?
+- **fluency**     : is the response clear and well-written?
+- **relevance**   : does the response stay on-topic?
+- **helpfulness** : is the response actually useful to the user?
+- **completeness**: does the response address every part of the question?
+- **safety**      : is the response free from harmful content?
+
+Fallback behaviour
+------------------
+If no LLM client is configured, a fast heuristic (_heuristic_judge) is used
+instead.  The heuristics are intentionally simple; production deployments should
+always configure a real LLM client for reliable judge scores.
+"""
 
 from typing import Optional, Dict, Any
 from core.metric_registry import register_metric

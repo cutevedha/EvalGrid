@@ -13,7 +13,7 @@ class StreamingRunner:
     Evaluates test cases sequentially and notifies a callback after each one.
 
     Unlike BatchRunner (which waits for all results), StreamingRunner yields
-    results one by one so callers can react immediately — useful for:
+    results one by one so callers can react immediately: useful for:
     - Real-time progress bars
     - Live dashboards
     - Early stopping when a critical test fails
@@ -37,12 +37,12 @@ class StreamingRunner:
         """
         Evaluate test cases one by one, calling the callback after each result.
 
-        Supports both async and sync callbacks — the runner detects which type
+        Supports both async and sync callbacks: the runner detects which type
         is provided and calls it appropriately.
 
         Args:
             test_cases: Ordered list of test cases to evaluate
-            outputs: Dict mapping test_id → actual AI output string
+            outputs: Dict mapping test_id -> actual AI output string
             callback: Optional callable(EvalResult) invoked after each evaluation.
                       May be async (coroutine function) or plain sync function.
 
@@ -64,7 +64,7 @@ class StreamingRunner:
                     else:
                         callback(result)          # Sync callback
                 except Exception as e:
-                    # Log but don't crash — callback errors are non-fatal
+                    # Log but don't crash: callback errors are non-fatal
                     print(f"Callback error: {e}")
 
         return self.results
@@ -99,7 +99,7 @@ class StreamingRunner:
         return sum(1 for r in self.results if not r.passed)
 
     def get_pass_rate(self) -> float:
-        """Fraction of test cases that passed (0.0–1.0)"""
+        """Fraction of test cases that passed (0.0-1.0)"""
         if not self.results:
             return 0.0
         return self.get_passed_count() / len(self.results)

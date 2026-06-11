@@ -54,7 +54,7 @@ def generate_agent_html_report(report, path: str, title: str = None) -> str:
     Returns:
         The path that was written.
     """
-    title = title or f"Auto Eval — {report.goal}"
+    title = title or f"Auto Eval: {report.goal}"
     verdict = "PASS" if report.passed else "FAIL"
     verdict_class = "verdict-pass" if report.passed else "verdict-fail"
 
@@ -97,7 +97,7 @@ def generate_agent_html_report(report, path: str, title: str = None) -> str:
 
   {coverage_section}
 </main>
-<footer>EvalGrid · autonomous agent report</footer>
+<footer>EvalGrid , autonomous agent report</footer>
 </body>
 </html>"""
 
@@ -166,7 +166,7 @@ def _render_metric_coverage(report) -> str:
 
     return f"""
   <section>
-    <h2>Full metric coverage — {len(totals)} metrics</h2>
+    <h2>Full metric coverage: {len(totals)} metrics</h2>
     <p class="sub">Mean score per metric across all {report.total_cases} cases. The agent runs every
     registry metric applicable to plain text output; metrics needing traces, documents or timing are skipped.</p>
     <details open>
@@ -210,7 +210,7 @@ def _render_rounds(report) -> str:
     <div class="round">
       <div class="round-head">
         <span class="round-num">Round {rnd.round_number}</span>
-        <span class="round-stat">{rnd.passed}/{rnd.cases_run} cases passed · {len(rnd.probes_run)} probe(s)</span>
+        <span class="round-stat">{rnd.passed}/{rnd.cases_run} cases passed , {len(rnd.probes_run)} probe(s)</span>
       </div>
       {dropped_html}
       <div class="chips">{probe_chips}</div>
@@ -220,11 +220,11 @@ def _render_rounds(report) -> str:
 
     note = (
         '<p class="sub">Each round, probes that pass (≥ 80%) are dropped and the agent '
-        'mutates the failing inputs into harder variants — so the funnel narrows onto real weaknesses.</p>'
+        'mutates the failing inputs into harder variants: so the funnel narrows onto real weaknesses.</p>'
     )
     return f"""
   <section>
-    <h2>Adaptive drilling — round by round</h2>
+    <h2>Adaptive drilling: round by round</h2>
     {note}
     <div class="rounds">{''.join(stages)}</div>
   </section>"""
@@ -244,14 +244,14 @@ def _render_findings(report) -> str:
         )
         weakest = (
             f"{escape(f.weakest_metric)} ({f.weakest_metric_score:.2f})"
-            if f.weakest_metric else "—"
+            if f.weakest_metric else " - "
         )
-        # Sample failing inputs — escaped because attack strings contain markup-like text.
+        # Sample failing inputs: escaped because attack strings contain markup-like text.
         if f.failing_inputs:
             items = "".join(f"<li>{escape(s)}</li>" for s in f.failing_inputs)
             failing = f'<details><summary>{len(f.failing_inputs)} sample(s)</summary><ul>{items}</ul></details>'
         else:
-            failing = "—"
+            failing = " - "
 
         rows.append(f"""
       <tr>

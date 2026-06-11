@@ -20,7 +20,7 @@ from governance.audit import content_hash
 # ============================================================================
 
 def _normalize(text: str) -> str:
-    """Lowercase + collapse whitespace — the canonical form for overlap comparisons."""
+    """Lowercase + collapse whitespace: the canonical form for overlap comparisons."""
     return re.sub(r"\s+", " ", (text or "").lower()).strip()
 
 
@@ -45,7 +45,7 @@ class DatasetSnapshot:
     An immutable, content-addressed snapshot of an evaluation dataset.
 
     The ``version_id`` is a hash of the (name + samples), so any change to the data
-    necessarily changes the version — you cannot silently alter a dataset and keep its ID.
+    necessarily changes the version: you cannot silently alter a dataset and keep its ID.
     ``parent_version`` records lineage across revisions.
     """
     name: str
@@ -170,7 +170,7 @@ def detect_contamination(samples: List[Dict[str, Any]], reference_corpus: List[s
                          threshold: float = 0.9) -> List[str]:
     """
     Flag samples whose input closely matches any text in a reference corpus (e.g. the
-    model's known training data or canary strings) — i.e. likely contaminated.
+    model's known training data or canary strings): i.e. likely contaminated.
     """
     flagged = []
     for sid, s in _ids(samples):

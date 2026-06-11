@@ -89,7 +89,7 @@ def agent_communication_clarity(test_case, actual_output, messages: List[str] = 
     Average clarity score for all messages exchanged between agents.
 
     A message is considered clear if it has more than 10 characters and at
-    least 2 words — ruling out empty or one-word messages.
+    least 2 words: ruling out empty or one-word messages.
 
     Args:
         messages: List of inter-agent message strings
@@ -117,7 +117,7 @@ def task_delegation_efficiency(test_case, actual_output, delegations: List[Dict]
         delegations: List of delegation records with routing metadata
     """
     if not delegations:
-        return {"task_delegation_efficiency": 1.0}  # No delegations — assume efficient
+        return {"task_delegation_efficiency": 1.0}  # No delegations: assume efficient
 
     efficient = sum(1 for d in delegations if d.get("appropriate_agent"))
     return {"task_delegation_efficiency": efficient / len(delegations) if delegations else 0.0}
@@ -132,7 +132,7 @@ def agent_collaboration_score(test_case, actual_output, collaboration_metrics: D
     returns their mean as a single composite collaboration score.
 
     Args:
-        collaboration_metrics: Dict mapping sub-metric name → score
+        collaboration_metrics: Dict mapping sub-metric name -> score
     """
     if not collaboration_metrics:
         return {"agent_collaboration_score": 0.5}  # Neutral when no data

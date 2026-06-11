@@ -1,6 +1,19 @@
-# Mock Target Adapter - In-memory LLM stub for tests and the `auto` mock target
-# Returns deterministic placeholder responses without any network calls, so the
-# autonomous agent and the test suite can run with no API keys or external services.
+"""
+adapters/llm/mock_target_adapter.py: Fake LLM for testing without API keys.
+
+The MockLLMAdapter stands in for a real LLM during unit tests and CI runs.
+It returns fixed, deterministic responses instantly: no network calls, no
+rate limits, no costs.
+
+When to use it
+--------------
+- Automated tests that should not depend on external services.
+- Demonstrating EvalGrid features (eval-grid auto --target mock).
+- Developing new metrics: you need an output to evaluate, not a real LLM answer.
+
+The mock tracks call_count so your tests can assert that the adapter was invoked
+the expected number of times.
+"""
 
 from typing import List, Dict
 

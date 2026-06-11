@@ -4,7 +4,7 @@
 # access to rubrics / gold labels / scoring logic.
 #
 # DESIGN NOTE: every control here is opt-in and a no-op unless configured. Ceilings only
-# act at their limit and rate limiting only engages when a rate is set — so enabling
+# act at their limit and rate limiting only engages when a rate is set: so enabling
 # operational safety never slows a normal evaluation run.
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ async def run_resilient(coro_factory: Callable[[], Awaitable[Any]], policy: Resi
 
     ``coro_factory`` must return a *fresh* awaitable each attempt. On timeout or error the
     call is retried up to ``policy.retries`` times, then the fallback is returned (and the
-    failure is audited — never silently swallowed).
+    failure is audited: never silently swallowed).
     """
     attempts = policy.retries + 1
     last_error = None
@@ -68,7 +68,7 @@ class CostMeter:
     """
     Tracks cumulative cost/calls and stops the run at a configured ceiling.
 
-    With no ceilings set it only accumulates totals — it never blocks. Ceilings exist to
+    With no ceilings set it only accumulates totals: it never blocks. Ceilings exist to
     prevent runaway spend, not to throttle throughput.
     """
 
@@ -121,7 +121,7 @@ def is_scorable_pass(output: Optional[str], passed_flag: bool) -> bool:
     A result may only count as a pass if the output was actually OK.
 
     A missing/malformed/errored output can never be a pass, even if a downstream metric
-    defaulted to passing — closing the "partial failures silently count as passes" gap.
+    defaulted to passing: closing the "partial failures silently count as passes" gap.
     """
     if classify_output(output) != OUTPUT_OK:
         return False

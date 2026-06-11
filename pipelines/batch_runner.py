@@ -1,5 +1,34 @@
-# Batch Runner - Parallel and streaming evaluation pipelines with CI/CD gate support
-# Provides BatchRunner, StreamingRunner, and GatingRunner for production-grade evaluation
+"""
+pipelines/batch_runner.py: High-throughput and CI/CD evaluation pipelines.
+
+This module provides three runner classes that sit on top of the Orchestrator
+and handle how evaluations are executed at scale:
+
+BatchRunner
+-----------
+Evaluates a large set of test cases in parallel using asyncio.  Uses a semaphore
+to cap the number of simultaneous evaluations so external APIs are not overwhelmed.
+After the run, it exposes summary statistics (pass rate, timing, score distribution).
+
+StreamingRunner
+---------------
+Evaluates test cases one at a time and fires a callback after each result.  Ideal
+for real-time dashboards, progress bars, or early-stopping logic where you want to
+react to each result as it arrives rather than waiting for the whole batch.
+
+GatingRunner
+------------
+CI/CD quality gate evaluator.  You define named gates, each linking a metric to a
+minimum acceptable average score.  After evaluation, gates report pass/fail and the
+runner exposes all_gates_passed(): call sys.exit(1) if False to block a deployment.
+
+    Example::
+        gating = GatingRunner(orchestrator)
+        gating.add_gate("safety_gate", "policy_safe", threshold=1.0, severity="critical")
+        gate_results = gating.evaluate_gates_sync(results)
+        if not gating.all_gates_passed():
+            sys.exit(1)  # Block the release
+"""
 
 from core.schemas import TestCase, EvalResult
 from core.orchestrator import Orchestrator
@@ -43,7 +72,7 @@ class BatchRunner:
 
         Args:
             test_cases: List of test cases to evaluate
-            outputs: Dict mapping test_id → actual AI output
+            outputs: Dict mapping test_id -> actual AI output
 
         Returns:
             List of EvalResults in the same order as test_cases
@@ -77,7 +106,7 @@ class BatchRunner:
         return self.metrics
 
     def get_pass_rate(self) -> float:
-        """Fraction of test cases that passed (0.0–1.0)"""
+        """Fraction of test cases that passed (0.0-1.0)"""
         if self.metrics["total_tests"] == 0:
             return 0.0
         return self.metrics["passed_tests"] / self.metrics["total_tests"]
@@ -99,7 +128,7 @@ class BatchRunner:
         Return results matching an arbitrary predicate function.
 
         Args:
-            predicate: Callable(EvalResult) → bool
+            predicate: Callable(EvalResult) -> bool
         """
         return [r for r in self.results if predicate(r)]
 
@@ -135,7 +164,7 @@ class BatchRunner:
             bins: Number of histogram buckets
 
         Returns:
-            Dict mapping bucket label → count
+            Dict mapping bucket label -> count
         """
         scores = [r.scores.get(metric_name, 0.0) for r in self.results if metric_name in r.scores]
 
@@ -177,7 +206,7 @@ class StreamingRunner:
 
         Args:
             test_cases: Ordered list of test cases
-            outputs: Dict mapping test_id → actual AI output
+            outputs: Dict mapping test_id -> actual AI output
             callback: Optional async or sync callable(EvalResult) called after each evaluation
 
         Returns:
@@ -206,7 +235,7 @@ class GatingRunner:
     CI/CD quality gate evaluator.
 
     Each gate maps a metric to a minimum acceptable average score.
-    After evaluation, gates report pass/fail status — failed gates can block deployments.
+    After evaluation, gates report pass/fail status: failed gates can block deployments.
 
     Example usage::
         gating = GatingRunner(orchestrator)
@@ -219,7 +248,7 @@ class GatingRunner:
 
     def __init__(self, orchestrator: Orchestrator):
         self.orchestrator = orchestrator
-        self.gates = {}  # gate_name → gate config dict
+        self.gates = {}  # gate_name -> gate config dict
 
     def add_gate(self, gate_name: str, metric_name: str, threshold: float, severity: str = "medium") -> None:
         """
@@ -228,7 +257,7 @@ class GatingRunner:
         Args:
             gate_name: Unique identifier for this gate
             metric_name: Metric to evaluate (must be in EvalResult.scores)
-            threshold: Minimum acceptable average score (0.0–1.0)
+            threshold: Minimum acceptable average score (0.0-1.0)
             severity: Informational severity label (low/medium/high/critical)
         """
         self.gates[gate_name] = {
@@ -249,7 +278,7 @@ class GatingRunner:
             results: List of EvalResults from a batch run
 
         Returns:
-            Dict mapping gate_name → bool (True = passed)
+            Dict mapping gate_name -> bool (True = passed)
         """
         gate_results = {}
 
@@ -261,7 +290,7 @@ class GatingRunner:
             scores = [r.scores.get(metric_name, 0.0) for r in results if metric_name in r.scores]
 
             if not scores:
-                gate_results[gate_name] = False  # No data — fail the gate
+                gate_results[gate_name] = False  # No data: fail the gate
                 continue
 
             avg_score = sum(scores) / len(scores)

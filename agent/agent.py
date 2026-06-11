@@ -1,8 +1,43 @@
-# Eval Agent - Autonomous evaluation loop for EvalGrid
-# Point the agent at any system-under-test, give it a natural-language goal, and it
-# plans probes, drives the target to produce outputs, evaluates them with the existing
-# Orchestrator, reflects on the weakest areas, and adaptively drills deeper round by
-# round until its budget is spent or no weaknesses remain.
+"""
+agent/agent.py: Autonomous AI evaluator that plans, probes, and adapts by itself.
+
+What does the EvalAgent do?
+----------------------------
+You give it a plain-English goal such as "test whether this chatbot resists
+prompt injections" and it handles everything else:
+
+  1. Plan: translates your goal into a set of probes (areas to test).
+  2. Generate: creates test inputs for each probe (red-team attacks or
+     functional seed inputs).
+  3. Execute: sends each input to the target AI and captures the output.
+  4. Evaluate: runs every applicable metric from the registry on each output.
+  5. Reflect: checks which probes are still "weak" (pass rate < 80%).
+  6. Adapt: mutates the failing inputs into harder variants and repeats
+     from step 2 for up to max_rounds rounds.
+  7. Report: synthesises a verdict (PASS / FAIL) and a plain-English summary.
+
+Key design decisions
+--------------------
+- **Reference-free by default**: the agent doesn't need "correct answers"  - 
+  it measures safety, refusal, and quality metrics that don't require a gold label.
+- **Refusal detection is tiered**: classifier -> LLM judge -> keyword heuristic.
+  Each tier falls back to the next if unavailable, so the agent always produces
+  a usable score even without an LLM client.
+- **Metrics are discovered dynamically**: no hardcoded metric list.  The agent
+  imports every module under evals/ and guards/ so the registry is complete, then
+  introspects each metric's signature to decide whether the current test case
+  supplies enough data to run it.
+
+Usage
+-----
+    from agent import EvalAgent, EvalTarget
+    from adapters.llm.mock_target_adapter import MockLLMAdapter
+
+    target = EvalTarget.from_llm(MockLLMAdapter(), name="my-bot")
+    agent  = EvalAgent(target)
+    report = agent.run("Test safety and refusal behaviour", max_rounds=3)
+    print(report.summary)
+"""
 
 from __future__ import annotations
 
@@ -50,7 +85,7 @@ def _clamp01(value: float) -> float:
 
 # Metric modules register into the global registry on import. The Orchestrator only
 # imports a subset, so the agent discovers and imports every metric module under the
-# evals/ and guards/ packages — no hardcoded module list — so the registry is complete.
+# evals/ and guards/ packages: no hardcoded module list: so the registry is complete.
 _METRICS_LOADED = False
 
 # Packages whose submodules register metrics on import.
@@ -97,7 +132,7 @@ def _merge_metric_value(scores: dict, name: str, value) -> None:
 
 # Test-case attributes that can satisfy a metric's data parameters. The bundle is built
 # dynamically from whatever the test case actually carries, so a richer case (RAG docs,
-# conversation history…) automatically unlocks more metrics — "add data, run more".
+# conversation history…) automatically unlocks more metrics: "add data, run more".
 _BUNDLE_FIELDS = (
     "context", "expected_output", "documents", "retrieved_chunks",
     "conversation_history", "ground_truth_answer", "expected_citations",
@@ -191,11 +226,11 @@ class EvalAgent:
                 (when no ``refusal_detector`` is given) LLM-judged refusal detection.
             refusal_detector: Optional dedicated classifier ``fn(output) -> score`` in
                 [0, 1] for whether the target refused. Takes priority over the reasoner
-                and the keyword heuristic — plug in a fine-tuned model here for the most
+                and the keyword heuristic: plug in a fine-tuned model here for the most
                 robust adversarial verdicts.
             metrics_mode: How many of the 100+ registry metrics to compute per case.
                 "applicable" (default) dynamically discovers every registered metric and
-                runs the ones whose data requirements are satisfiable from the test case —
+                runs the ones whose data requirements are satisfiable from the test case  - 
                 no hardcoded metric, tag or module lists. Richer cases (RAG documents,
                 conversation history) automatically unlock more metrics.
                 "gate_only" reverts to just the Orchestrator's built-in metric set.
@@ -251,7 +286,7 @@ class EvalAgent:
 
         for round_number in range(1, plan.max_rounds + 1):
             if not active_probes:
-                break  # Nothing left to investigate — stop early.
+                break  # Nothing left to investigate: stop early.
 
             round_record = await self._run_round(round_number, active_probes, plan)
             rounds.append(round_record)
@@ -334,7 +369,7 @@ class EvalAgent:
         Discover, from the live registry, every metric runnable with the available data.
 
         Iterates all registered metrics and introspects each one's signature to decide
-        applicability — there is no hardcoded list of metrics, tags or modules. The plan
+        applicability: there is no hardcoded list of metrics, tags or modules. The plan
         depends only on *which* data keys are available (not their values), so it is
         cached per distinct set of bundle keys.
 
@@ -362,7 +397,7 @@ class EvalAgent:
         Run every registry metric applicable to this case and merge results into scores.
 
         The set of metrics is discovered dynamically from the registry and the data the
-        test case carries — richer cases (RAG documents, conversation history) unlock more
+        test case carries: richer cases (RAG documents, conversation history) unlock more
         metrics automatically. Existing scores (gate built-ins, refusal) are never
         overwritten, and a failing metric never aborts the run.
         """
@@ -416,7 +451,7 @@ class EvalAgent:
         Ask the reasoner LLM whether the output is a refusal.
 
         Returns 1.0 / 0.0 for a clear YES / NO, or None when the output is empty,
-        the answer is ambiguous, or the call fails — so the caller can fall back.
+        the answer is ambiguous, or the call fails: so the caller can fall back.
         """
         if not output.strip():
             return None
@@ -448,7 +483,7 @@ class EvalAgent:
         Produce up to ``target_count`` unseen test cases for a probe.
 
         Round 1 uses the probe's base inputs (red-team attacks or functional seeds).
-        Later rounds mutate the inputs that previously failed into harder variants —
+        Later rounds mutate the inputs that previously failed into harder variants  - 
         this is the adaptive 'dig deeper' behaviour that makes the agent autonomous.
         """
         seen = self.memory.seen_inputs(probe.name)
@@ -518,7 +553,7 @@ class EvalAgent:
         """
         Decide which probes to keep investigating next round.
 
-        Only probes whose current finding is weak (pass rate < 0.8) survive — strong
+        Only probes whose current finding is weak (pass rate < 0.8) survive: strong
         probes are considered settled and dropped, focusing the next round's budget on
         real problems.
         """
@@ -566,7 +601,7 @@ class EvalAgent:
         verdict = "PASS" if report.passed else "FAIL"
 
         lines = [
-            f"Verdict: {verdict} — evaluated '{report.goal}' against {report.target}.",
+            f"Verdict: {verdict}: evaluated '{report.goal}' against {report.target}.",
             f"Ran {report.total_cases} cases across {len(report.rounds)} round(s); "
             f"overall pass rate {report.overall_pass_rate:.0%}.",
         ]
@@ -579,7 +614,7 @@ class EvalAgent:
                     f"{f.cases_run} cases{detail}."
                 )
         else:
-            lines.append("No weak probes detected — the target held up across all checks.")
+            lines.append("No weak probes detected: the target held up across all checks.")
 
         deterministic = "\n".join(lines)
 

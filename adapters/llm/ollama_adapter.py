@@ -1,5 +1,24 @@
-# Ollama Adapter - Async client for a local Ollama server running open-source LLMs
-# Requires: pip install httpx  +  a running Ollama instance (https://ollama.ai)
+"""
+adapters/llm/ollama_adapter.py: Connect EvalGrid to open-source models via Ollama.
+
+Ollama lets you run large language models locally on your own machine: no API
+key, no usage fees, and full privacy.
+
+Prerequisites
+-------------
+1. Install Ollama:  https://ollama.ai
+2. Pull a model:    ollama pull llama2
+3. Install httpx:   pip install httpx
+
+Usage
+-----
+    from adapters.llm.ollama_adapter import OllamaAdapter
+    client = OllamaAdapter(model="llama2")
+    response = client.generate_sync("What is 2 + 2?")
+
+The adapter connects to a locally running Ollama server (default port 11434).
+To use a remote server, pass a different base_url.
+"""
 
 from typing import List, Dict
 import asyncio
@@ -9,7 +28,7 @@ from adapters.llm.base import LLMClient
 
 class OllamaAdapter(LLMClient):
     """
-    Async adapter for Ollama — a local model server that runs open-source LLMs.
+    Async adapter for Ollama: a local model server that runs open-source LLMs.
 
     Requires: pip install httpx  +  a running Ollama instance
     Docs: https://ollama.ai

@@ -1,5 +1,22 @@
-# Orchestrator - Main evaluation engine for EvalGrid
-# Coordinates all evaluation metrics and produces comprehensive evaluation results
+"""
+core/orchestrator.py: The central coordinator that runs every evaluation.
+
+The Orchestrator is the brain of EvalGrid.  When you want to judge an AI's answer,
+you call orchestrator.run(test_case, actual_output) and it automatically:
+
+  1. Runs deterministic checks (exact match, keyword presence, regex patterns).
+  2. Runs semantic checks (how similar is the answer in meaning?).
+  3. Checks safety / policy compliance.
+  4. Asks an LLM judge for a quality rating.
+  5. Validates any required JSON structure.
+  6. Detects PII (emails, phone numbers, credit cards) in the output.
+  7. Detects prompt-injection attacks in the input.
+  8. Decides PASS / FAIL based on the thresholds in the test case.
+
+You can run a single evaluation (run / run_async) or a large batch in parallel
+(run_batch / run_batch_async).  The concurrency parameter controls how many
+evaluations run simultaneously so you don't overwhelm external APIs.
+"""
 
 from core.schemas import EvalResult, TestCase
 from core.metric_registry import MetricRegistry
@@ -12,6 +29,11 @@ from guards.pii import detect_pii, mask_pii
 from guards.prompt_injection import is_prompt_injection
 from typing import Dict, List, Optional, Any
 import asyncio
+
+
+# Bumped when the evaluation logic changes in a way that affects comparability of
+# historical runs: makes it easy to filter results by evaluator generation.
+EVALUATOR_VERSION = "1.0"
 
 
 class Orchestrator:
@@ -96,7 +118,13 @@ class Orchestrator:
         # Generate notes for failed tests
         notes = [] if passed else ["One or more thresholds failed", f"PII masked: {mask_pii(actual_output)}"]
 
-        return EvalResult(test_id=test_case.id, passed=passed, scores=scores, notes=notes)
+        return EvalResult(
+            test_id=test_case.id,
+            passed=passed,
+            scores=scores,
+            notes=notes,
+            evaluator_version=EVALUATOR_VERSION,
+        )
 
     async def run_batch_async(self, test_cases: List[TestCase], outputs: Dict[str, str], concurrency: int = 5) -> List[EvalResult]:
         """

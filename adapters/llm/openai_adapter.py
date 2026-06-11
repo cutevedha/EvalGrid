@@ -1,5 +1,27 @@
-# OpenAI Adapter - Async client for the OpenAI API (also compatible with Azure OpenAI)
-# Requires: pip install openai
+"""
+adapters/llm/openai_adapter.py: Connect EvalGrid to the OpenAI API (GPT models).
+
+Installation
+------------
+    pip install openai
+
+Authentication
+--------------
+Pass api_key= explicitly, or set the OPENAI_API_KEY environment variable and
+leave api_key=None (the OpenAI SDK picks it up automatically).
+
+Usage
+-----
+    from adapters.llm.openai_adapter import OpenAIAdapter
+    client = OpenAIAdapter(model="gpt-4o-mini")
+    response = client.generate_sync("What is 2 + 2?")
+
+Azure OpenAI
+------------
+This adapter is also compatible with Azure OpenAI endpoints.  Configure the
+base URL and API version via the AsyncOpenAI(base_url=..., api_version=...)
+constructor if needed.
+"""
 
 from typing import List, Dict
 import asyncio

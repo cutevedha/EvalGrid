@@ -1,5 +1,14 @@
-# Safety Evaluator - Policy compliance check for AI outputs
-# Wraps the policy guard to produce a standardised metric score
+"""
+evals/safety.py: Policy-compliance metric for AI outputs.
+
+This is the thin evaluation layer that connects the raw policy guard
+(guards/policy.py) to the metric scoring system used by the Orchestrator.
+
+A score of 1.0 means the output is safe and policy-compliant.
+A score of 0.0 means the output contains a blocked phrase (policy violation).
+
+To add or change what phrases are blocked, edit guards/policy.py.
+"""
 
 from guards.policy import policy_check
 

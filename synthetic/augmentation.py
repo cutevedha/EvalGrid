@@ -1,5 +1,22 @@
-# Data Augmentation - Generates variations of test cases for robustness testing
-# Creates paraphrases, typos, noise, and other variations to test AI system robustness
+"""
+synthetic/augmentation.py: Generate variations of test inputs for robustness testing.
+
+A robust AI system should behave correctly not just on perfectly worded inputs, but
+also on inputs with typos, noise, different word order, or minor rephrasing.
+
+This module creates those variations automatically so you can:
+  1. Test whether your AI handles imperfect real-world inputs.
+  2. Give the EvalAgent fresh inputs for each adaptive round without repeating tests.
+
+Augmentation strategies available
+----------------------------------
+- **Typo injection**: randomly swap, delete, or insert characters.
+- **Word shuffle**: randomise word order (tests semantic robustness).
+- **Case variation**: uppercase, lowercase, random mixed case.
+- Negation: insert "not" or "do not" (tests instruction following).
+- **Noise words**: insert random words (tests noise resistance).
+- create_adversarial_variants() bundles all strategies into one call.
+"""
 
 from typing import List, Dict, Any
 import random
