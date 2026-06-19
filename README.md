@@ -36,13 +36,13 @@
 ## Install
 
 ```bash
-pip install evalgrid
+pip install evalgrid-framework
 
 # With your preferred LLM provider:
-pip install "evalgrid[openai]"        # OpenAI
-pip install "evalgrid[anthropic]"     # Anthropic Claude
-pip install "evalgrid[gemini]"        # Google Gemini
-pip install "evalgrid[all]"           # everything
+pip install "evalgrid-framework[openai]"        # OpenAI
+pip install "evalgrid-framework[anthropic]"     # Anthropic Claude
+pip install "evalgrid-framework[gemini]"        # Google Gemini
+pip install "evalgrid-framework[all]"           # everything
 ```
 
 ---
