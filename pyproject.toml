@@ -3,15 +3,110 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "eval-grid"
-version = "0.1.0"
-description = "Comprehensive evaluation framework for LLM and AI projects"
+name = "evalgrid"
+version = "1.0.0"
+description = "The fastest, most cost-efficient LLM evaluation framework — 100+ metrics, parallel async eval, batched judging, native pytest integration."
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.10"
-dependencies = ["pydantic>=2.0", "pandas>=2.0", "numpy>=1.20", "PyYAML>=6.0"]
+authors = [
+    {name = "Saro", email = "saro.periyasamy@gmail.com"},
+]
+keywords = [
+    "llm",
+    "evaluation",
+    "ai",
+    "rag",
+    "agent",
+    "openai",
+    "anthropic",
+    "gpt",
+    "claude",
+    "testing",
+    "judge",
+    "metric",
+    "benchmark",
+    "deepeval",
+    "ragas",
+    "guardrails",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "Framework :: Pytest",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pydantic>=2.0",
+    "pandas>=2.0",
+    "numpy>=1.20",
+    "PyYAML>=6.0",
+    "httpx>=0.24.0",
+]
+
+[project.optional-dependencies]
+openai     = ["openai>=1.0.0"]
+anthropic  = ["anthropic>=0.7.0"]
+gemini     = ["google-generativeai>=0.3.0"]
+excel      = ["openpyxl>=3.0"]
+semantic   = ["sentence-transformers>=2.2.0"]
+all = [
+    "openai>=1.0.0",
+    "anthropic>=0.7.0",
+    "google-generativeai>=0.3.0",
+    "openpyxl>=3.0",
+    "sentence-transformers>=2.2.0",
+    "rich>=13.0.0",
+]
+dev = [
+    "pytest>=8.0",
+    "build>=1.0",
+    "twine>=4.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage      = "https://github.com/cutevedha/EvalGrid"
+Documentation = "https://github.com/cutevedha/EvalGrid#readme"
+Repository    = "https://github.com/cutevedha/EvalGrid"
+Issues        = "https://github.com/cutevedha/EvalGrid/issues"
+Changelog     = "https://github.com/cutevedha/EvalGrid/blob/main/CHANGELOG.md"
 
 [project.scripts]
 eval-grid = "scripts.cli:main"
+evalgrid  = "scripts.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["core*", "evals*", "guards*", "adapters*", "pipelines*", "reports*", "agent*", "synthetic*", "scripts*"]
+include = [
+    "evalgrid*",
+    "core*",
+    "evals*",
+    "guards*",
+    "adapters*",
+    "pipelines*",
+    "reports*",
+    "agent*",
+    "synthetic*",
+    "scripts*",
+    "loaders*",
+    "governance*",
+]
+exclude = ["tests*", "examples*", "docs*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts   = "-ra --strict-markers"
+asyncio_mode = "auto"

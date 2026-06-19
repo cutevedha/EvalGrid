@@ -1,8 +1,11 @@
 adapters
 agent
 core
+evalgrid
 evals
+governance
 guards
+loaders
 pipelines
 reports
 scripts

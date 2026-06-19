@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from governance.metric_spec import bootstrap_ci
@@ -28,7 +28,7 @@ class RunManifest:
     judge_version: str = "n/a"
     framework_version: str = "n/a"
     objective: str = ""
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
     def as_dict(self) -> Dict[str, Any]:
         return dict(self.__dict__)

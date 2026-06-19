@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from governance.audit import content_hash
@@ -57,7 +57,7 @@ class Baseline:
     version: str
     versions: ComponentVersions
     summary: Dict[str, Any]              # e.g. {"pass_rate": 0.91, ...}
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
 
 class BaselineStore:
@@ -113,7 +113,7 @@ class BaselineStore:
 class BreakingChange:
     component: str
     description: str
-    at: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
 
 def mark_breaking_changes(changed_components: List[str], descriptions: Optional[Dict[str, str]] = None) -> List[BreakingChange]:

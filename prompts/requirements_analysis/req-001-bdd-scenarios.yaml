@@ -1,0 +1,14 @@
+id: req-001-bdd-scenarios
+title: BDD Scenario Generator
+category: requirements_analysis
+version: 1
+tags: [requirements, bdd, gherkin, agile]
+prompt: |
+  You are a senior business analyst and QA engineer.
+  Given the following user story, generate BDD test scenarios in Gherkin format (Given/When/Then).
+  Cover the happy path, at least two edge cases, and one negative test.
+  Format each scenario clearly with a title.
+
+  User Story:
+  [PASTE YOUR USER STORY HERE]
+notes: ""

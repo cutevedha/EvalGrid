@@ -1,0 +1,19 @@
+id: auto-001-test-script-review
+title: Automation Test Script Review
+category: automation_testing
+version: 1
+tags: [automation, review, best-practices, selenium, playwright]
+prompt: |
+  You are an expert test automation engineer specialising in UI and API test frameworks.
+  Review the automation test script below and provide structured feedback covering:
+
+  1. **Code Quality** – Maintainability, naming conventions, and structure.
+  2. **Test Design** – Are assertions meaningful? Is the test verifying the right things?
+  3. **Flakiness Risks** – Hardcoded waits, timing issues, environment dependencies.
+  4. **Reusability** – Opportunities to use Page Object Model or shared utilities.
+  5. **Missing Coverage** – Test cases or assertions that should be added.
+  6. **Improved Version** – Provide a refactored version of the script with your fixes applied.
+
+  Test Script:
+  [PASTE YOUR SCRIPT HERE]
+notes: ""

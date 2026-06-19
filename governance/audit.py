@@ -10,7 +10,7 @@ import json
 import os
 import uuid
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 
@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 
 def new_run_id(prefix: str = "run") -> str:
     """Generate a unique, sortable run identifier (e.g. run-20260611T120000-ab12cd34)."""
-    stamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
     return f"{prefix}-{stamp}-{uuid.uuid4().hex[:8]}"
 
 
@@ -39,7 +39,7 @@ class AuditEvent:
     """A single, immutable record of something the framework did."""
     run_id: str
     event: str                      # e.g. "dataset.snapshot", "score.computed", "gate.failed"
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
     detail: Dict[str, Any] = field(default_factory=dict)
 
 

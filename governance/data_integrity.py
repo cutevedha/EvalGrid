@@ -9,8 +9,8 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from governance.audit import content_hash
 
@@ -24,15 +24,15 @@ def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "").lower()).strip()
 
 
-def _tokens(text: str) -> set:
+def _tokens(text: str) -> Set[str]:
     return set(_normalize(text).split())
 
 
 def _jaccard(a: str, b: str) -> float:
-    ta, tb = _tokens(a), _tokens(b)
-    if not ta or not tb:
+    tokens_a, tokens_b = _tokens(a), _tokens(b)
+    if not tokens_a or not tokens_b:
         return 0.0
-    return len(ta & tb) / len(ta | tb)
+    return len(tokens_a & tokens_b) / len(tokens_a | tokens_b)
 
 
 # ============================================================================
@@ -50,7 +50,7 @@ class DatasetSnapshot:
     """
     name: str
     samples: List[Dict[str, Any]]
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
     parent_version: Optional[str] = None
     provenance: Dict[str, str] = field(default_factory=dict)  # sample_id -> source
     version_id: str = ""
@@ -110,6 +110,7 @@ class DatasetSnapshot:
 # ============================================================================
 
 def _input_of(sample: Dict[str, Any]) -> str:
+    """Return the input text for a sample, or empty string when absent."""
     return sample.get("input", "")
 
 
@@ -200,8 +201,5 @@ def integrity_report(samples: List[Dict[str, Any]]) -> Dict[str, Any]:
 # ============================================================================
 
 def _ids(samples: List[Dict[str, Any]]) -> List[Tuple[str, Dict[str, Any]]]:
-    """Pair each sample with its id, generating a stable fallback id when missing."""
-    out = []
-    for idx, s in enumerate(samples):
-        out.append((str(s.get("id", f"idx{idx}")), s))
-    return out
+    """Pair each sample with its string id, generating a stable fallback id when missing."""
+    return [(str(s.get("id", f"idx{idx}")), s) for idx, s in enumerate(samples)]

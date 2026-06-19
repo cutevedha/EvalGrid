@@ -20,7 +20,7 @@ to/from JSON with zero boilerplate.
 
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # ============================================================================
@@ -73,6 +73,8 @@ class TestCase(BaseModel):
     severity: Literal["low", "medium", "high", "critical"] = "medium"  # Test severity level
     evaluation_mode: Literal["deterministic", "semantic", "judge", "hybrid"] = "hybrid"  # How to evaluate
     thresholds: Dict[str, float] = {}  # Pass/fail thresholds per metric
+    expected_behavior: Optional[str] = None  # "refusal" | "answer" | any label; drives behavior_correctness metric
+    system_prompt: Optional[str] = None  # System prompt the model was given; used by prompt_alignment metric
 
 
 # ============================================================================
@@ -114,7 +116,7 @@ class EvalResult(BaseModel):
     passed: bool  # Whether the test passed
     scores: Dict[str, float]  # Metric scores (0-1 range)
     notes: List[str] = []  # Additional notes or failure reasons
-    timestamp: datetime = Field(default_factory=datetime.utcnow)  # When evaluation occurred
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))  # When evaluation occurred
     evaluator_version: str = "1.0"  # Version of evaluator used
 
 

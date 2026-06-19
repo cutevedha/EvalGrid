@@ -1,0 +1,19 @@
+id: auto-002-test-case-generator
+title: Automation Test Case Generator
+category: automation_testing
+version: 1
+tags: [automation, test-cases, selenium, playwright, api]
+prompt: |
+  You are a test automation architect.
+  Based on the feature description below, generate automation test cases in a table format with these columns:
+  | Test Case ID | Test Scenario | Pre-conditions | Test Steps | Expected Result | Priority | Automation Framework Hint |
+
+  Include:
+  - At least 5 positive test cases
+  - At least 3 negative/boundary test cases
+  - 1 performance-sensitive test case
+  - Automation framework hints (e.g., Selenium, Playwright, REST Assured)
+
+  Feature Description:
+  [PASTE YOUR FEATURE DESCRIPTION HERE]
+notes: ""

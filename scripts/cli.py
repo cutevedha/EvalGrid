@@ -96,6 +96,19 @@ def main():
     auto_parser.add_argument("--rounds", type=int, default=3, help="Max adaptive rounds")
     auto_parser.add_argument("--cases", type=int, default=5, help="Cases per probe per round")
     auto_parser.add_argument("--output", default="output", help="Output directory")
+    auto_parser.add_argument("--api-key", dest="api_key", default=None,
+                             help="API key for the target (overrides env var)")
+    auto_parser.add_argument("--base-url", dest="base_url", default=None,
+                             help="Custom base URL for the target (Azure, proxy, local vLLM, etc.)")
+    auto_parser.add_argument("--data-file", dest="data_file", default=None,
+                             help="Pre-built test dataset file (.xlsx, .json, .jsonl, .csv, .yaml)")
+    auto_parser.add_argument("--data-format", dest="data_format", default="auto",
+                             choices=["auto", "excel", "json", "jsonl", "csv", "yaml"],
+                             help="File format override (default: auto-detect from extension)")
+    auto_parser.add_argument("--sheet", dest="sheet", default=None,
+                             help="Excel sheet name or index (default: first sheet)")
+    auto_parser.add_argument("--augment-factor", dest="augment_factor", type=int, default=1,
+                             help="Dataset augmentation multiplier: 2 doubles inputs via paraphrase/typos (default: 1)")
 
     # ========================================================================
     # COMMAND: govern  (governed evaluation through the GovernancePipeline)
@@ -110,6 +123,101 @@ def main():
     govern_parser.add_argument("--samples", help="JSON file of samples (defaults to a built-in red-team suite)")
     govern_parser.add_argument("--min-samples", type=int, default=30, help="Minimum sample size to accept")
     govern_parser.add_argument("--output", default="output", help="Output directory")
+    govern_parser.add_argument("--api-key", dest="api_key", default=None,
+                               help="API key for the target (overrides env var)")
+    govern_parser.add_argument("--base-url", dest="base_url", default=None,
+                               help="Custom base URL for the target (Azure, proxy, local vLLM, etc.)")
+    govern_parser.add_argument("--data-file", dest="data_file", default=None,
+                               help="Test dataset file (.xlsx, .json, .jsonl, .csv, .yaml) — overrides --samples")
+    govern_parser.add_argument("--data-format", dest="data_format", default="auto",
+                               choices=["auto", "excel", "json", "jsonl", "csv", "yaml"],
+                               help="File format override (default: auto-detect from extension)")
+    govern_parser.add_argument("--sheet", dest="sheet", default=None,
+                               help="Excel sheet name or index (default: first sheet)")
+    govern_parser.add_argument("--augment-factor", dest="augment_factor", type=int, default=1,
+                               help="Dataset augmentation multiplier (default: 1 = no augmentation)")
+
+    # ========================================================================
+    # COMMAND: init  (scaffold a sample dataset + runnable script)
+    # ========================================================================
+    init_parser = sub.add_parser("init", help="Scaffold a sample dataset + runnable script")
+    init_parser.add_argument("--dir", dest="output_dir", default=".",
+                             help="Directory in which to create the sample files (default: current directory)")
+
+    # ========================================================================
+    # COMMAND: quickstart  (run the sample evaluation end-to-end)
+    # ========================================================================
+    quick_parser = sub.add_parser("quickstart", help="Run the sample evaluation end-to-end and open the report")
+    quick_parser.add_argument("--dir", dest="output_dir", default=".",
+                              help="Directory containing the sample (default: current directory)")
+    quick_parser.add_argument("--no-open", dest="no_open", action="store_true",
+                              help="Skip opening the HTML report in a browser")
+
+    # ========================================================================
+    # COMMAND: eval  (the one-liner evaluation API)
+    # ========================================================================
+    eval_parser = sub.add_parser("eval", help="Evaluate a dataset against chosen metrics")
+    eval_parser.add_argument("--cases", required=True,
+                             help="Path to a dataset file (.xlsx, .json, .jsonl, .csv, .yaml)")
+    eval_parser.add_argument("--metrics", default="generation",
+                             help="Preset name (generation, rag, safety, agent, …) or comma-separated metric names")
+    eval_parser.add_argument("--threshold", type=float, default=0.5,
+                             help="Pass/fail score threshold (default: 0.5)")
+    eval_parser.add_argument("--cache", action="store_true",
+                             help="Enable score caching to skip repeat LLM calls")
+    eval_parser.add_argument("--output", default="evalgrid_output",
+                             help="Directory for the HTML, CSV, JSON reports")
+    eval_parser.add_argument("--quiet", action="store_true",
+                             help="Silence stdout; reports are still written")
+
+    # ========================================================================
+    # COMMAND: benchmark  (head-to-head token comparison vs other frameworks)
+    # ========================================================================
+    bench_parser = sub.add_parser("benchmark", help="Run a head-to-head token-cost benchmark against DeepEval")
+    bench_parser.add_argument("--vs", default="deepeval", choices=["deepeval"],
+                              help="Framework to compare against (default: deepeval)")
+    bench_parser.add_argument("--cases", type=int, default=100,
+                              help="Number of synthetic test cases to use (default: 100)")
+    bench_parser.add_argument("--metrics",
+                              default="answer_relevancy,faithfulness,hallucination,contextual_precision,contextual_recall",
+                              help="Comma-separated DeepEval metric names to compare")
+
+    # ========================================================================
+    # COMMAND: prompt-lab
+    # ========================================================================
+    pl_parser = sub.add_parser(
+        "prompt-lab",
+        help="Test, score, and fix prompts across ChatGPT, Gemini, and Copilot",
+    )
+    pl_parser.add_argument(
+        "--prompt-id", dest="prompt_id",
+        help="ID of a prompt in the library (skips the interactive menu)",
+    )
+    pl_parser.add_argument(
+        "--llm", dest="llms", action="append",
+        choices=["ChatGPT", "Gemini", "Copilot"],
+        help="Which LLMs to test (repeat for multiple, default = all three)",
+    )
+    pl_parser.add_argument(
+        "--output", default="output/prompt_lab",
+        help="Directory where HTML reports are saved",
+    )
+    pl_parser.add_argument(
+        "--list", dest="list_prompts", action="store_true",
+        help="List all prompts in the library and exit",
+    )
+    pl_parser.add_argument(
+        "--category",
+        help="Filter --list by category",
+    )
+    pl_parser.add_argument(
+        "--no-fix", dest="no_fix", action="store_true",
+        help="Disable automatic prompt-fix suggestion",
+    )
+    pl_parser.add_argument(
+        "--no-open", dest="no_open", action="store_true",
+        help="Do not open the HTML report in a browser automatically",
+    )
 
     # ========================================================================
     # COMMAND: list-metrics
@@ -140,6 +248,9 @@ def main():
     if args.cmd == "run-demo":
         _run_demo(args.output)
 
+    elif args.cmd == "prompt-lab":
+        _run_prompt_lab(args)
+
     elif args.cmd == "auto":
         _run_auto(args)
 
@@ -158,8 +269,107 @@ def main():
     elif args.cmd == "compare":
         _compare_runs(args.baseline, args.current, args.output)
 
+    elif args.cmd == "init":
+        _run_init(args)
+
+    elif args.cmd == "quickstart":
+        _run_quickstart(args)
+
+    elif args.cmd == "eval":
+        _run_eval_command(args)
+
+    elif args.cmd == "benchmark":
+        _run_benchmark_command(args)
+
     else:
         parser.print_help()
+
+
+# ============================================================================
+# NEW HANDLERS: init, quickstart, eval
+# ============================================================================
+
+def _run_init(args) -> None:
+    """Scaffold a sample dataset + runnable script for new users."""
+    from evalgrid.quickstart import init_project
+
+    paths = init_project(args.output_dir)
+    print("EvalGrid scaffold created:")
+    print(f"  • {paths['dataset']}")
+    print(f"  • {paths['script']}")
+    print()
+    print("Next steps:")
+    print("  1. python example_eval.py        # run the sample evaluation")
+    print("  2. eval-grid quickstart           # one-command demo with HTML report")
+    print("  3. Replace evalgrid_sample_tests.json with your own dataset")
+
+
+def _run_quickstart(args) -> None:
+    """Run the bundled quickstart demo end-to-end and open the report."""
+    from evalgrid.quickstart import run_quickstart
+
+    print("EvalGrid Quickstart")
+    print("=" * 60)
+    result = run_quickstart(args.output_dir)
+    print()
+    print(f"Pass rate: {result['pass_rate']:.0%}")
+    print(f"HTML report: {result['report_html']}")
+    print(f"JSON report: {result['report_json']}")
+    print(f"CSV report:  {result['report_csv']}")
+
+    if not getattr(args, "no_open", False):
+        import webbrowser
+        webbrowser.open(f"file://{Path(result['report_html']).resolve()}")
+
+
+def _run_eval_command(args) -> None:
+    """Run the one-liner ``evaluate()`` on a dataset file."""
+    from evalgrid import evaluate
+
+    metrics_arg = args.metrics
+    if "," in metrics_arg:
+        metrics_arg = [m.strip() for m in metrics_arg.split(",") if m.strip()]
+
+    run = evaluate(
+        cases=args.cases,
+        metrics=metrics_arg,
+        threshold=args.threshold,
+        cache=args.cache,
+        quiet=args.quiet,
+        progress=not args.quiet,
+    )
+
+    out_dir = Path(args.output)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    run.to_html(str(out_dir / "report.html"))
+    run.to_json(str(out_dir / "report.json"))
+    run.to_csv (str(out_dir / "report.csv"))
+
+    if not args.quiet:
+        print()
+        print(f"Reports written to {out_dir}/")
+
+    if not run.passed:
+        raise SystemExit(1)
+
+
+def _run_benchmark_command(args) -> None:
+    """Run a head-to-head token-cost benchmark against another framework."""
+    from evalgrid.benchmarks import benchmark_vs_deepeval, print_comparison
+
+    cases = [
+        {
+            "id": f"c{i}",
+            "input":  f"What is the capital of country {i}? Please answer concisely.",
+            "output": f"The capital of country {i} is City {i}, established as the capital in the 19th century.",
+            "context": f"Country {i} is a sovereign nation whose capital City {i} was founded in 1850.",
+        }
+        for i in range(args.cases)
+    ]
+    metric_list = [m.strip() for m in args.metrics.split(",") if m.strip()]
+
+    result = benchmark_vs_deepeval(cases=cases, deepeval_metrics=metric_list)
+    print_comparison(result)
 
 
 # ============================================================================
@@ -196,28 +406,47 @@ def _run_demo(output_dir):
 
 def _build_auto_target(args):
     """
-    Construct an EvalTarget for the `auto` command based on CLI args.
+    Construct an EvalTarget for the `auto` / `govern` commands based on CLI args.
 
     Supported targets:
       mock     -> in-memory MockLLMAdapter (no API key, runs anywhere)
-      openai   -> OpenAIAdapter (needs OPENAI_API_KEY)
-      anthropic-> AnthropicAdapter (needs ANTHROPIC_API_KEY)
-      ollama   -> local Ollama server
+      openai   -> OpenAIAdapter (needs OPENAI_API_KEY or --api-key)
+      anthropic-> AnthropicAdapter (needs ANTHROPIC_API_KEY or --api-key)
+      ollama   -> local or remote Ollama server (--base-url, optional --api-key)
       offline  -> pre-computed outputs loaded from a JSON file
+
+    Both --api-key and --base-url are optional. When omitted, each adapter falls
+    back to its own default (environment variable for api_key, standard endpoint for base_url).
     """
     from agent import EvalTarget
     from adapters.llm import (
         MockLLMAdapter, OpenAIAdapter, AnthropicAdapter, OllamaAdapter,
     )
 
+    api_key  = getattr(args, "api_key",  None)
+    base_url = getattr(args, "base_url", None)
+
     if args.target == "mock":
         return EvalTarget.from_llm(MockLLMAdapter(), name="mock")
     if args.target == "openai":
-        return EvalTarget.from_llm(OpenAIAdapter(model=args.model or "gpt-3.5-turbo"), name="openai")
+        return EvalTarget.from_llm(
+            OpenAIAdapter(api_key=api_key, model=args.model or "gpt-3.5-turbo", base_url=base_url),
+            name="openai",
+        )
     if args.target == "anthropic":
-        return EvalTarget.from_llm(AnthropicAdapter(model=args.model or "claude-3-sonnet-20240229"), name="anthropic")
+        return EvalTarget.from_llm(
+            AnthropicAdapter(api_key=api_key, model=args.model or "claude-3-sonnet-20240229", base_url=base_url),
+            name="anthropic",
+        )
     if args.target == "ollama":
-        return EvalTarget.from_llm(OllamaAdapter(model=args.model or "llama2"), name="ollama")
+        return EvalTarget.from_llm(
+            OllamaAdapter(
+                base_url=base_url or "http://localhost:11434",
+                model=args.model or "llama2",
+                api_key=api_key,
+            ),
+            name="ollama",
+        )
     if args.target == "offline":
         if not args.outputs:
             raise SystemExit("--outputs JSON file is required for --target offline")
@@ -291,8 +520,16 @@ def _run_govern(args):
 
     target = _build_auto_target(args)
 
-    # Samples: caller-supplied JSON, or a built-in red-team suite (reused from synthetic).
-    if args.samples:
+    # Samples: priority order — --data-file > --samples > built-in red-team suite
+    if getattr(args, "data_file", None):
+        from loaders.dataset_loader import load_dataset_raw
+        samples = load_dataset_raw(
+            args.data_file,
+            format=getattr(args, "data_format", "auto"),
+            sheet_name=getattr(args, "sheet", None),
+        )
+        print(f"Loaded {len(samples)} samples from {args.data_file}")
+    elif args.samples:
         with open(args.samples, "r") as f:
             samples = json.load(f)
     else:
@@ -302,6 +539,13 @@ def _run_govern(args):
              "capability": "agent", "risk_tags": c.get("risk_tags", [])}
             for c in generate_redteam_cases()
         ]
+
+    # Augment dataset if requested (varies phrasings to test robustness)
+    augment_factor = getattr(args, "augment_factor", 1)
+    if augment_factor > 1:
+        from synthetic.augmentation import augment_dataset
+        samples = augment_dataset(samples, augmentation_factor=augment_factor)
+        print(f"Augmented to {len(samples)} samples (factor {augment_factor}x)")
 
     print(f"Governed evaluation of '{target.name}': objective: {args.goal}")
     print(f"Samples: {len(samples)} | min required: {args.min_samples}")
@@ -492,6 +736,81 @@ def _compare_runs(baseline_file, current_file, output_file):
 
     Path(output_file).write_text(comparison, encoding='utf-8')
     print(f"[OK] Comparison saved to {output_file}")
+
+
+def _run_prompt_lab(args):
+    """
+    prompt-lab command handler.
+
+    Without --prompt-id, launches the friendly interactive wizard.
+    With --prompt-id, runs non-interactively (useful for CI / scripting).
+    """
+    import webbrowser
+    from pathlib import Path
+    from dotenv import load_dotenv
+
+    load_dotenv()  # pick up .env keys before anything else
+
+    from prompt_lab.library import list_prompts, load_prompt
+
+    # --list mode
+    if getattr(args, "list_prompts", False):
+        prompts = list_prompts(category=getattr(args, "category", None))
+        if not prompts:
+            print("No prompts found in the library.")
+            print(f"Add YAML files under: prompts/<category>/<id>.yaml")
+            return
+        print(f"\n{'ID':<30} {'Category':<25} {'Title':<35} Ver  Tags")
+        print("-" * 110)
+        for p in prompts:
+            tags = ", ".join(p.tags) if p.tags else "—"
+            print(f"{p.id:<30} {p.category:<25} {p.title:<35} {p.version:<4} {tags}")
+        print()
+        return
+
+    # Non-interactive mode (--prompt-id supplied)
+    if getattr(args, "prompt_id", None):
+        try:
+            p = load_prompt(args.prompt_id)
+        except FileNotFoundError as exc:
+            print(f"\n  Error: {exc}")
+            return
+
+        llms = args.llms or None  # None = all three
+        print(f"\nRunning Prompt Lab on: {p.title}")
+        print(f"LLMs: {', '.join(llms) if llms else 'ChatGPT, Gemini, Copilot'}")
+
+        from prompt_lab.runner import run_all_sync
+        from prompt_lab.evaluator import evaluate
+        from prompt_lab.report import generate_html, print_summary
+        import re, os
+
+        print("Sending prompt to LLMs...", end=" ", flush=True)
+        llm_results = run_all_sync(p.prompt, llms=llms)
+        print("done")
+
+        auto_fix = not getattr(args, "no_fix", False) and bool(os.environ.get("ANTHROPIC_API_KEY"))
+        report = evaluate(
+            prompt_id=p.id,
+            prompt_title=p.title,
+            prompt_text=p.prompt,
+            llm_results=llm_results,
+            auto_fix=auto_fix,
+        )
+
+        safe_id = re.sub(r"[^a-z0-9_-]", "_", p.id.lower())
+        report_path = str(Path(args.output) / f"{safe_id}_report.html")
+        generate_html(report, report_path)
+        print_summary(report)
+        print(f"  HTML report: {report_path}")
+
+        if not getattr(args, "no_open", False):
+            webbrowser.open(f"file://{Path(report_path).resolve()}")
+        return
+
+    # Interactive wizard (default)
+    from prompt_lab.wizard import run_wizard
+    run_wizard(output_dir=args.output)
 
 
 # ============================================================================

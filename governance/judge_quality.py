@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from governance.audit import AuditLog, content_hash
@@ -22,7 +22,7 @@ class JudgePromptVersion:
     version: str          # content hash
     text: str
     note: str
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
 
 class JudgePromptRegistry:
@@ -80,7 +80,10 @@ def has_reference_leak(judge_prompt: str, reference_answer: str) -> bool:
 # JUDGE BIAS CHECKS  (position / length / style)
 # ============================================================================
 
-def position_consistency(pairwise_judge: Callable[[str, str], int], pairs: Sequence[Tuple[str, str]]) -> float:
+def position_consistency(
+    pairwise_judge: Callable[[str, str], int],
+    pairs: Sequence[Tuple[str, str]],
+) -> float:
     """
     Position-bias probe for a pairwise judge.
 
@@ -146,7 +149,7 @@ class OverrideDecision:
     decision: str          # e.g. "pass" / "fail"
     reviewer: str
     reason: str
-    at: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
 
 
 class HumanOverride:
@@ -177,11 +180,13 @@ class HumanOverride:
 # ============================================================================
 
 def _pearson(xs: Sequence[float], ys: Sequence[float]) -> float:
+    """Pearson correlation coefficient between two equal-length sequences."""
     n = len(xs)
-    mx, my = sum(xs) / n, sum(ys) / n
-    cov = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
-    vx = sum((x - mx) ** 2 for x in xs) ** 0.5
-    vy = sum((y - my) ** 2 for y in ys) ** 0.5
-    if vx == 0 or vy == 0:
+    mean_x = sum(xs) / n
+    mean_y = sum(ys) / n
+    covariance = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys))
+    std_x = sum((x - mean_x) ** 2 for x in xs) ** 0.5
+    std_y = sum((y - mean_y) ** 2 for y in ys) ** 0.5
+    if std_x == 0 or std_y == 0:
         return 0.0
-    return round(cov / (vx * vy), 4)
+    return round(covariance / (std_x * std_y), 4)

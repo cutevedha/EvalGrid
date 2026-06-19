@@ -1,0 +1,26 @@
+id: gov-001-defect-report
+title: Defect Report Writer
+category: test_governance
+version: 1
+tags: [governance, defect, bug-report, jira]
+prompt: |
+  You are a QA engineer writing a professional defect report.
+  Using the information below, produce a complete defect report suitable for JIRA or any bug tracker.
+  Include all fields:
+
+  - **Title**: Clear, concise one-line summary
+  - **Severity**: (Critical / High / Medium / Low) with justification
+  - **Priority**: (P1 / P2 / P3 / P4) with justification
+  - **Environment**: OS, browser/device, app version, build number
+  - **Pre-conditions**: State of the system before the defect is triggered
+  - **Steps to Reproduce**: Numbered, detailed steps
+  - **Actual Result**: What actually happened
+  - **Expected Result**: What should have happened
+  - **Impact**: Business impact of this defect
+  - **Attachments**: List what evidence should be attached (screenshots, logs)
+  - **Root Cause Hypothesis**: Likely technical cause (if known)
+  - **Suggested Fix**: (if obvious)
+
+  Raw Defect Information:
+  [PASTE YOUR DEFECT NOTES HERE]
+notes: ""

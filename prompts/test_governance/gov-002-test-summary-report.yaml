@@ -1,0 +1,22 @@
+id: gov-002-test-summary-report
+title: Test Summary Report Generator
+category: test_governance
+version: 1
+tags: [governance, summary, report, release, management]
+prompt: |
+  You are a QA lead preparing a test summary report for stakeholders.
+  Using the metrics and notes below, write a professional test summary report.
+  Use clear, non-technical language for the executive summary.
+
+  Structure:
+  1. **Executive Summary** (3-4 sentences, business language)
+  2. **Test Scope** – What was tested and what was not.
+  3. **Test Results Summary** – Table: Total / Passed / Failed / Blocked / Not Run.
+  4. **Defect Summary** – By severity, status (Open/Closed/Deferred).
+  5. **Key Risks** – Any outstanding risks to the release.
+  6. **Go / No-Go Recommendation** – With clear justification.
+  7. **Lessons Learned** – 2-3 process improvements for the next cycle.
+
+  Test Metrics and Notes:
+  [PASTE YOUR TEST METRICS AND NOTES HERE]
+notes: ""

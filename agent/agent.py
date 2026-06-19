@@ -42,7 +42,7 @@ Usage
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable, List, Optional
 
 from core.orchestrator import Orchestrator
@@ -278,7 +278,7 @@ class EvalAgent:
             max_rounds: Hard cap on adaptive rounds.
             cases_per_probe: Cases generated per active probe per round.
         """
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         plan = self.planner.plan(goal, capabilities, max_rounds, cases_per_probe)
 
         rounds: List[RoundRecord] = []
@@ -294,7 +294,7 @@ class EvalAgent:
             # Reflect: keep drilling only into probes that came back weak.
             active_probes = self._reflect(active_probes)
 
-        finished_at = datetime.utcnow()
+        finished_at = datetime.now(timezone.utc)
         return self._build_report(goal, plan, rounds, started_at, finished_at)
 
     # ------------------------------------------------------------------

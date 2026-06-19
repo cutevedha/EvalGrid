@@ -1,0 +1,23 @@
+id: perf-001-test-plan
+title: Performance Test Plan Generator
+category: performance_testing
+version: 1
+tags: [performance, load-testing, jmeter, k6, test-plan]
+prompt: |
+  You are a performance testing engineer.
+  Create a comprehensive performance test plan for the system described below.
+  Structure the plan as follows:
+
+  1. **Objectives** – What we are testing and why.
+  2. **Scope** – Included and excluded components.
+  3. **Test Types** – Load, stress, soak, spike test definitions with pass/fail criteria.
+  4. **Workload Model** – Number of virtual users, ramp-up strategy, think time.
+  5. **KPIs & SLAs** – Response time targets (p50, p90, p95, p99), throughput, error rate.
+  6. **Test Data Strategy** – How test data will be prepared.
+  7. **Environment Requirements** – Infrastructure, monitoring, and tooling needed.
+  8. **Risks & Mitigations** – Top 3 performance risks.
+  9. **Tool Recommendation** – JMeter, k6, Locust, or Gatling — with justification.
+
+  System Description:
+  [PASTE YOUR SYSTEM DESCRIPTION HERE]
+notes: ""

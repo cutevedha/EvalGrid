@@ -1,0 +1,24 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+include requirements.txt
+include pyproject.toml
+recursive-include evalgrid *.py
+recursive-include core *.py
+recursive-include evals *.py
+recursive-include guards *.py
+recursive-include adapters *.py
+recursive-include pipelines *.py
+recursive-include reports *.py
+recursive-include agent *.py
+recursive-include synthetic *.py
+recursive-include scripts *.py
+recursive-include loaders *.py
+recursive-include governance *.py
+prune tests
+prune examples
+prune docs
+prune .github
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude .DS_Store

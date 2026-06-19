@@ -1,0 +1,18 @@
+id: req-002-requirements-review
+title: Requirements Quality Review
+category: requirements_analysis
+version: 1
+tags: [requirements, review, quality, ambiguity]
+prompt: |
+  You are a senior QA analyst performing a requirements review.
+  Analyse the requirements below and provide:
+
+  1. **Ambiguities** – List any unclear or vague statements with suggested rewrites.
+  2. **Missing Information** – Identify gaps that could block testing.
+  3. **Testability Issues** – Flag requirements that cannot be objectively verified.
+  4. **Risk Areas** – Highlight requirements that carry high testing risk.
+  5. **Suggested Test Types** – For each requirement, recommend the most appropriate test type (functional, integration, performance, security, etc.).
+
+  Requirements:
+  [PASTE YOUR REQUIREMENTS HERE]
+notes: ""
